@@ -1,13 +1,13 @@
-﻿// jdyun 24/04/06(토)
+﻿// jdyun 24/04/07(일)
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace P4VHelper.Command.MainView
+namespace P4VHelper.Base.Extension
 {
-    internal class MainViewCommander
+    public static class StringEx
     {
     }
 }

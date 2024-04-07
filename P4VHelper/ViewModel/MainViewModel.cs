@@ -1,4 +1,4 @@
-﻿// jdyun 24/04/06
+﻿// jdyun 24/04/06(토)
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,4 @@
-﻿// jdyun 24/04/06
+﻿// jdyun 24/04/06(토)
 using System.Diagnostics;
 
 namespace P4VHelper.Base.Logger
