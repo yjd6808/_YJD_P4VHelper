@@ -10,6 +10,6 @@ namespace P4VHelper.Base
 {
     public class ViewModel : Bindable
     {
-        public Logger.Logger? Logger { get; }
+        public Logger.Logger? Logger { get; protected set; }
     }
 }

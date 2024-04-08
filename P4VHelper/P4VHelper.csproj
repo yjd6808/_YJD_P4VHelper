@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Logger\" />
+    <None Remove="Resource\history.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Customize\Style\" />
+    <Folder Include="Resource\Images\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +23,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\P4VHelper.Base\P4VHelper.Base.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resource\Icons\history.png" />
   </ItemGroup>
 
 </Project>

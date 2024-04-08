@@ -13,6 +13,11 @@ namespace P4VHelper.Base.Command
         public string Name => GetType().Name;
         public string Description { get; }
 
+        public Command(string description)
+        {
+            Description = description;
+        }
+
         public bool CanExecute(object? parameter)
         {
             return true;
@@ -23,7 +28,10 @@ namespace P4VHelper.Base.Command
             Execute();
         }
 
-        public abstract void Execute();
+        public virtual void Execute()
+        {
+            // TODO: 자식에서 구현
+        }
 
         public event EventHandler? CanExecuteChanged;
     }
@@ -51,7 +59,11 @@ namespace P4VHelper.Base.Command
             }
         }
 
-        public abstract void Execute(T param);
+        public virtual void Execute(T param)
+        {
+            // TODO: 자식에서 구현
+        }
+
         public event EventHandler? CanExecuteChanged;
     }
 }

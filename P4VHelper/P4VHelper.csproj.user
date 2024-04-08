@@ -7,6 +7,17 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Customize\Control\LogListBox.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Customize\Control\LogListBox.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Customize\Converter.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="View\MainView.xaml">
       <SubType>Designer</SubType>
     </Page>

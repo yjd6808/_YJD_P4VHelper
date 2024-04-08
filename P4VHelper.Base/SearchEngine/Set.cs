@@ -1,4 +1,5 @@
 ﻿// jdyun 24/04/07(일)
+// 무지성 코딩 ㅈㅅ, 폐기물
 using System;
 using System.Buffers.Text;
 using System.Collections.Generic;

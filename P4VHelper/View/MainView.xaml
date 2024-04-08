@@ -4,13 +4,36 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:P4VHelper"
+        xmlns:res="clr-namespace:P4VHelper.Resource"
+        xmlns:cus_ctrl="clr-namespace:P4VHelper.Customize.Control"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800"
+        Loaded="OnLoaded"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <Menu Background="Transparent">
-                <MenuItem />
+                <MenuItem Header="파일"
+                          Command="{Binding ViewModel.Commander.Test}"/>
             </Menu>
         </StackPanel>
+
+        <cus_ctrl:LogListBox x:Name="LogListBox" 
+                             DockPanel.Dock="Bottom"
+                             Width="{Binding Width}"
+                             Height="300">
+        </cus_ctrl:LogListBox>
+
+        <TabControl DockPanel.Dock="Bottom">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_HISTORY_KEY}}" />
+                        <TextBlock Text="History" VerticalAlignment="Center" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Label Content="Content goes here..." />
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>
