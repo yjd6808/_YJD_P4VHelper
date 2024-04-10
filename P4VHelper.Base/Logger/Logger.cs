@@ -14,11 +14,34 @@ namespace P4VHelper.Base.Logger
         }
 
         public abstract void Write(LogLevel level, string msg);
+
+        public void Write(int id, LogLevel level, string msg)
+        {
+            Logger? cur = this;
+
+            while (cur != null)
+            {
+                if (cur._id == id)
+                {
+                    cur.Write(level, msg);
+                    break;
+                }
+
+                cur = cur._next;
+            }
+        }
+
         public void WriteDebug(string msg) => Write(LogLevel.Debug, msg);
         public void WriteInfo(string msg) => Write(LogLevel.Info, msg);
         public void WriteError(string msg) => Write(LogLevel.Error, msg);
         public void WriteNormal(string msg) => Write(LogLevel.Normal, msg);
         public void WriteWarn(string msg) => Write(LogLevel.Warn, msg);
+
+        public void WriteDebug(int id, string msg) => Write(id, LogLevel.Debug, msg);
+        public void WriteInfo(int id, string msg) => Write(id, LogLevel.Info, msg);
+        public void WriteError(int id, string msg) => Write(id, LogLevel.Error, msg);
+        public void WriteNormal(int id, string msg) => Write(id, LogLevel.Normal, msg);
+        public void WriteWarn(int id, string msg) => Write(id, LogLevel.Warn, msg);
 
 
         protected void WriteChaining(LogLevel level, string msg)

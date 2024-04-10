@@ -12,10 +12,19 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Customize\Control.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Customize\Style.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Customize\Control\LogListBox.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Customize\Converter.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Customize\Control\PlaceholderTextBox.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="View\MainView.xaml">

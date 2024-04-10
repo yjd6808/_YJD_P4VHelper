@@ -39,6 +39,10 @@ namespace P4VHelper.Base.Command
         public string Name => GetType().Name;
         public string Description { get; }
         public Action<Exception>? ErrorHandler { get; }
+        public CommandAsync(string description, Action<Exception>? errorHandler) : base(description)
+        {
+            ErrorHandler = errorHandler;
+        }
 
         public virtual async Task ExecuteAsync(T param)
         {

@@ -18,10 +18,7 @@ using System.Windows.Shapes;
 
 namespace P4VHelper.Customize.Control
 {
-    /// <summary>
-    /// Interaction logic for LogListBox.xaml
-    /// </summary>
-    public partial class LogListBox : UserControl
+    public partial class LogListBox : System.Windows.Controls.UserControl
     {
         public ObservableCollection<string> Logs { get; } = new();
 

@@ -40,6 +40,10 @@ namespace P4VHelper.Base.Command
     {
         public string Name => GetType().Name;
         public string Description { get; }
+        public Command(string description)
+        {
+            Description = description;
+        }
 
         public virtual bool CanExecute(object? parameter)
         {
