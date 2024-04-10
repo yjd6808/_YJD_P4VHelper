@@ -38,7 +38,7 @@ namespace P4VHelper.Model
 
         private void ThreadRoutine()
         {
-            for (; ; )
+            for (;;)
             {
                 BackgroundTask? task;
 

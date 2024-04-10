@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace P4VHelper.Base.Extension
 {
-    public static class Interlocked
+    public static class InterlockedEx
     {
         public static int Get(ref int target)
         {

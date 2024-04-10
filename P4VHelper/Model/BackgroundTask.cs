@@ -46,8 +46,7 @@ namespace P4VHelper.Model
 
         }
 
-        public virtual void OnEnd()
-        {
+        public virtual void OnEnd() {
 
         }
     }
