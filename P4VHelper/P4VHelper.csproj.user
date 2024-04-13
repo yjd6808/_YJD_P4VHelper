@@ -27,6 +27,9 @@
     <Page Update="Customize\Control\PlaceholderTextBox.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Customize\Style\ImageButton.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="View\MainView.xaml">
       <SubType>Designer</SubType>
     </Page>

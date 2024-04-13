@@ -22,6 +22,7 @@ namespace P4VHelper.View
     public partial class MainView : Window
     {
         public MainViewModel ViewModel { get; }
+
         public MainView()
         {
             ViewModel = new MainViewModel();

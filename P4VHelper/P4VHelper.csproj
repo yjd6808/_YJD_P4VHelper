@@ -10,11 +10,45 @@
 
   <ItemGroup>
     <None Remove="Resource\history.png" />
+    <None Remove="Resource\Icons\arrow_bottom.ico" />
+    <None Remove="Resource\Icons\arrow_bottomleft.ico" />
+    <None Remove="Resource\Icons\arrow_bottomright.ico" />
+    <None Remove="Resource\Icons\arrow_left.ico" />
+    <None Remove="Resource\Icons\arrow_right.ico" />
+    <None Remove="Resource\Icons\arrow_top.ico" />
+    <None Remove="Resource\Icons\arrow_topleft.ico" />
+    <None Remove="Resource\Icons\arrow_topright.ico" />
+    <None Remove="Resource\Icons\common_album.ico" />
+    <None Remove="Resource\Icons\common_anchor.ico" />
+    <None Remove="Resource\Icons\common_backup.ico" />
+    <None Remove="Resource\Icons\common_checked.ico" />
+    <None Remove="Resource\Icons\common_collapse.ico" />
+    <None Remove="Resource\Icons\common_delete.ico" />
+    <None Remove="Resource\Icons\common_down.ico" />
+    <None Remove="Resource\Icons\common_empty.ico" />
+    <None Remove="Resource\Icons\common_grid.ico" />
+    <None Remove="Resource\Icons\common_info.ico" />
+    <None Remove="Resource\Icons\common_link.ico" />
+    <None Remove="Resource\Icons\common_music.ico" />
+    <None Remove="Resource\Icons\common_not_usable.ico" />
+    <None Remove="Resource\Icons\common_pin.ico" />
+    <None Remove="Resource\Icons\common_position.ico" />
+    <None Remove="Resource\Icons\common_rect.ico" />
+    <None Remove="Resource\Icons\common_refresh.ico" />
+    <None Remove="Resource\Icons\common_reset.ico" />
+    <None Remove="Resource\Icons\common_select.ico" />
+    <None Remove="Resource\Icons\common_spark.ico" />
+    <None Remove="Resource\Icons\common_transparent.ico" />
+    <None Remove="Resource\Icons\common_unclip.ico" />
+    <None Remove="Resource\Icons\common_unlock.ico" />
+    <None Remove="Resource\Icons\common_unpin.ico" />
+    <None Remove="Resource\Icons\common_up.ico" />
+    <None Remove="Resource\Icons\win_close.ico" />
+    <None Remove="Resource\Icons\win_maximize.ico" />
+    <None Remove="Resource\Icons\win_minimize.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Customize\Style\" />
-    <Folder Include="Logic\" />
     <Folder Include="Resource\Images\" />
   </ItemGroup>
 
@@ -27,7 +61,43 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resource\Icons\arrow_bottom.ico" />
+    <Resource Include="Resource\Icons\arrow_bottomleft.ico" />
+    <Resource Include="Resource\Icons\arrow_bottomright.ico" />
+    <Resource Include="Resource\Icons\arrow_left.ico" />
+    <Resource Include="Resource\Icons\arrow_right.ico" />
+    <Resource Include="Resource\Icons\arrow_top.ico" />
+    <Resource Include="Resource\Icons\arrow_topleft.ico" />
+    <Resource Include="Resource\Icons\arrow_topright.ico" />
+    <Resource Include="Resource\Icons\common_album.ico" />
+    <Resource Include="Resource\Icons\common_anchor.ico" />
+    <Resource Include="Resource\Icons\common_backup.ico" />
+    <Resource Include="Resource\Icons\common_checked.ico" />
+    <Resource Include="Resource\Icons\common_collapse.ico" />
+    <Resource Include="Resource\Icons\common_delete.ico" />
+    <Resource Include="Resource\Icons\common_down.ico" />
+    <Resource Include="Resource\Icons\common_empty.ico" />
+    <Resource Include="Resource\Icons\common_grid.ico" />
+    <Resource Include="Resource\Icons\common_info.ico" />
+    <Resource Include="Resource\Icons\common_link.ico" />
+    <Resource Include="Resource\Icons\common_music.ico" />
+    <Resource Include="Resource\Icons\common_not_usable.ico" />
+    <Resource Include="Resource\Icons\common_pin.ico" />
+    <Resource Include="Resource\Icons\common_position.ico" />
+    <Resource Include="Resource\Icons\common_rect.ico" />
+    <Resource Include="Resource\Icons\common_refresh.ico" />
+    <Resource Include="Resource\Icons\common_reset.ico" />
+    <Resource Include="Resource\Icons\common_select.ico" />
+    <Resource Include="Resource\Icons\common_spark.ico" />
+    <Resource Include="Resource\Icons\common_transparent.ico" />
+    <Resource Include="Resource\Icons\common_unclip.ico" />
+    <Resource Include="Resource\Icons\common_unlock.ico" />
+    <Resource Include="Resource\Icons\common_unpin.ico" />
+    <Resource Include="Resource\Icons\common_up.ico" />
     <Resource Include="Resource\Icons\history.png" />
+    <Resource Include="Resource\Icons\win_close.ico" />
+    <Resource Include="Resource\Icons\win_maximize.ico" />
+    <Resource Include="Resource\Icons\win_minimize.ico" />
   </ItemGroup>
 
 </Project>

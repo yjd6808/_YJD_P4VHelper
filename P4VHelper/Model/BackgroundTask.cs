@@ -4,50 +4,158 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Windows.Automation;
 using Accessibility;
 using P4VHelper.Base;
 using P4VHelper.Base.Extension;
+using P4VHelper.Base.Util;
+using P4VHelper.Model.TaskList;
+using P4VHelper.View;
 
 namespace P4VHelper.Model
 {
-    public class BackgroundTask : Bindable
+    public enum BackgroundTaskState
     {
-        public static BackgroundTask Default = new (null, "작업 없음", 0, () => {});
+        None,
+        Waiting,
+        Paused,
+        Running,
+        Finished
+    }
 
-        private int _completedSubtaskCount;
+    public abstract class BackgroundTask : Bindable, IProgressListener
+    {
+        public static BackgroundTask Default = new Default(null);
+
+        private bool _viewDetail;
+        private BackgroundTaskState _state = BackgroundTaskState.None;
         private Action _action;
 
-        public int CompletedSubtaskCount => InterlockedEx.Get(ref _completedSubtaskCount);
-        public int TotalSubtaskCount { get; }
-        public bool Completed => CompletedSubtaskCount >= TotalSubtaskCount;
-        public float CompletedPercent => (float)CompletedSubtaskCount / TotalSubtaskCount * 100.0f;
-        public string Name { get; }
-        public Action Action => _action;
-        public BackgroundTaskMgr Mgr { get; }
+        public abstract int TotalSubtaskCount { get; }
+        public abstract string Name { get; }
+        public abstract bool HasDetailView { get; }
+        public abstract ProgressNotifer Notifier { get; }
 
-        public BackgroundTask(BackgroundTaskMgr mgr, string name, int totalSubtaskCount, Action action)
+        public string Cur => Notifier.Cur.ToString();
+        public string Max => Notifier.Max.ToString();
+        public string Percent => Notifier.Percent.ToString("0.00");
+
+        public BackgroundTaskState State => _state;
+        public bool ViewDetail
         {
-            _completedSubtaskCount = 0;
-            _action = action;
+            get => _viewDetail;
+            set
+            {
+                _viewDetail = value;
+                _OnViewDetailChanged(value);
+            }
+        }
 
-            TotalSubtaskCount = totalSubtaskCount;
-            Name = name;
+        public BackgroundTaskMgr Mgr { get; }
+        public BackgroundTask(BackgroundTaskMgr mgr)
+        {
             Mgr = mgr;
         }
 
+        public abstract void Do();
+
         public void Execute()
         {
-            _action();
+            int max = Notifier.Max;
+
+            for (int i = 0; i < max; ++i)
+            {
+                Do();
+                Notifier.Progress();
+            }
         }
 
-        public virtual void OnBegin()
+        public void _OnBegin()
         {
+            _state = BackgroundTaskState.Running;
 
+            OnBegin();
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnPropertyChanged(nameof(State));
+                OnBeginDispatched();
+            });
         }
 
-        public virtual void OnEnd() {
+        public void _OnWaiting()
+        {
+            _state = BackgroundTaskState.Waiting;
 
+            OnWaiting();
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnPropertyChanged(nameof(State));
+                OnWaitingDispatched();
+            });
         }
+
+        public void _OnTargeted()
+        {
+            OnTargeted();
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(Cur));
+                OnPropertyChanged(nameof(Max));
+                OnPropertyChanged(nameof(Percent));
+
+                OnTargetedDispatched();
+            });
+        }
+
+        public void _OnEnd()
+        {
+            _state = BackgroundTaskState.Finished;
+
+            OnEnd();
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnPropertyChanged(nameof(State));
+                OnEndDispatched();
+            });
+        }
+
+        public void _OnPaused()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void _OnViewDetailChanged(bool changed)
+        {
+            OnViewDetailChanged(changed);
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnViewDetailChangedDispatched(changed);
+            });
+        }
+
+        public void _OnReported(int cur)
+        {
+            OnReported(cur);
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnReportedDispatched(cur);
+            });
+        }
+
+        protected virtual void OnBegin() {}
+        protected virtual void OnBeginDispatched() {}
+        protected virtual void OnWaiting() { }
+        protected virtual void OnWaitingDispatched() { }
+        protected virtual void OnTargeted() { }
+        protected virtual void OnTargetedDispatched() { }
+        protected virtual void OnEnd() {}
+        protected virtual void OnEndDispatched() {}
+        protected virtual void OnViewDetailChanged(bool changed) {}
+        protected virtual void OnViewDetailChangedDispatched(bool changed) { }
+        protected virtual void OnReported(int cur) { }
+        protected virtual void OnReportedDispatched(int cur) { }
     }
 }

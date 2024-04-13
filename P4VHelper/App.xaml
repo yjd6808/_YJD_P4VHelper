@@ -6,10 +6,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/P4VHelper;Component/Customize/Control.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/P4VHelper;Component/Customize/Converter.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/P4VHelper;Component/Customize/Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-
     </Application.Resources>
 </Application>

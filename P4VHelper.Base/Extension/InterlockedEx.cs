@@ -9,29 +9,48 @@ namespace P4VHelper.Base.Extension
 {
     public static class InterlockedEx
     {
-        public static int Get(ref int target)
+        public static class Int
         {
-            return Interlocked.CompareExchange(ref target, 0, 0);
+            public static int Get(ref int target)
+            {
+                return Interlocked.CompareExchange(ref target, 0, 0);
+            }
+
+            public static int Set(ref int target, int value)
+            {
+                return Interlocked.Exchange(ref target, value);
+            }
+
+            public static int Inc(ref int target)
+            {
+                return Interlocked.Increment(ref target);
+            }
+
+            public static int Dec(ref int target)
+            {
+                return Interlocked.Decrement(ref target);
+            }
+
+            public static int Add(ref int target, int value)
+            {
+                return Interlocked.Add(ref target, value);
+            }
         }
 
-        public static int Set(ref int target, int value)
+        public static class Bool
         {
-            return Interlocked.Exchange(ref target, value);
-        }
+            public static bool Get(ref int target)
+            {
+                return Interlocked.CompareExchange(ref target, 1, 1) == 1;
+            }
 
-        public static int Inc(ref int target)
-        {
-            return Interlocked.Increment(ref target);
-        }
+            public static bool Set(ref int target, bool value)
+            {
+                if (value)
+                    return Interlocked.CompareExchange(ref target, 1, 1) == 1;
 
-        public static int Dec(ref int target)
-        {
-            return Interlocked.Decrement(ref target);
-        }
-
-        public static int Add(ref int target, int value)
-        {
-            return Interlocked.Add(ref target, value);
+                return Interlocked.CompareExchange(ref target, 0, 0) == 0;
+            }
         }
     }
 }
