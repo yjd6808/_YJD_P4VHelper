@@ -18,6 +18,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Style/ImageButton.xaml" />
+                <ResourceDictionary Source="../Control/ImageToggleButton.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <c:PackUrlImageSourceConverter x:Key="PackUrlImageSourceConverter" />
         </ResourceDictionary>
@@ -47,30 +48,13 @@
                             ContentTemplate="{Binding TitleContentTemplate}">
             </ContentControl>
 
-            <Button Grid.Column="2" Click="PinOnClick">
-                <Button.Style>
-                    <Style TargetType="Button" BasedOn="{StaticResource ImageButton}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Topmost, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
-                                         Value="True">
-                                <Setter Property="p:ImageSourceProperty.Image" Value="{
-                                        Binding 
-                                        Converter={StaticResource PackUrlImageSourceConverter},
-                                        ConverterParameter={x:Static r:R.ICON_UNPIN_KEY}}">
-                                </Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Topmost, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
-                                         Value="False">
-                                <Setter Property="p:ImageSourceProperty.Image" Value="{
-                                        Binding 
-                                        Converter={StaticResource PackUrlImageSourceConverter},
-                                        ConverterParameter={x:Static r:R.ICON_PIN_KEY}}">
-                                </Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
+            <local:ImageToggleButton Grid.Column="2"
+                                     Click="PinOnClick"
+                                     NormalImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static r:R.ICON_PIN_KEY}}"
+                                     ToggledImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static r:R.ICON_UNPIN_KEY}}"
+                                     Toggled = "{Binding Topmost, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
+            </local:ImageToggleButton>
+
             <Button Grid.Column="3" 
                     Style="{StaticResource ImageButton}" 
                     Click="MinimizeOnClick"

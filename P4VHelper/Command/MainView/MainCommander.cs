@@ -15,12 +15,14 @@ namespace P4VHelper.Command.MainView
         public MainViewModel ViewModel { get; }
         
         public Base.Command.Command Test { get; }
+        public Base.Command.Command ShowStatusDetail { get; }
 
         public MainCommander(MainViewModel viewModel)
         {
             ViewModel = viewModel;
 
             Add(Test = new Test(viewModel));
+            Add(ShowStatusDetail = new ShowStatusDetail(viewModel));
         }
     }
 }

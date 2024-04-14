@@ -7,6 +7,8 @@
         xmlns:l="clr-namespace:P4VHelper"
         xmlns:res="clr-namespace:P4VHelper.Resource"
         xmlns:uc="clr-namespace:P4VHelper.Customize.Control"
+        xmlns:p="clr-namespace:P4VHelper.Customize.Property"
+        xmlns:r="clr-namespace:P4VHelper.Resource"
         mc:Ignorable="d"
         Title="MainWindow"
         Height="800"
@@ -80,6 +82,11 @@
                          DockPanel.Dock="Top"
                          TitleContentMargin="0, 0, 5, 0"
                          TitleContent="{Binding Source={x:Static l:Constant.Title}}">
+                <uc:TitleBar.TitleContentTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="테스트"/>
+                    </DataTemplate>
+                </uc:TitleBar.TitleContentTemplate>
             </uc:TitleBar>
 
             <!-- 메뉴 -->
@@ -183,14 +190,20 @@
                   Name="StatusGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="50" />
+                    <ColumnDefinition Width="30" />
                 </Grid.ColumnDefinitions>
+
+                <uc:ImageToggleButton Grid.Column="1"
+                                      NormalImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_UP_KEY}}"
+                                      ToggledImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_DOWN_KEY}}"
+                                      Toggled="{Binding ViewModel.TaskMgr.ViewdDetail}"
+                                      Command="{Binding ViewModel.Commander.ShowStatusDetail}">
+                </uc:ImageToggleButton>
             </Grid>
         </Grid>
         <Grid Grid.Row="1"
               Background="AntiqueWhite"
               VerticalAlignment="Bottom">
-
         </Grid>
     </Grid>
 </Window>

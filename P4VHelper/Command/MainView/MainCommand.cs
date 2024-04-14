@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace P4VHelper.Command.MainView
 {
-    internal class MainCommand : Base.Command.Command
+    public class MainCommand : Base.Command.Command
     {
         protected MainViewModel ViewModel { get; }
         public MainCommand(MainViewModel viewModel, string description) : base(description)

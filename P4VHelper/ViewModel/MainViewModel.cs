@@ -6,9 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using P4VHelper.Base.Logger;
 using P4VHelper.Command.MainView;
 using P4VHelper.Logger;
+using P4VHelper.Model;
 using P4VHelper.Model.Main;
 using P4VHelper.View;
 
@@ -18,11 +20,13 @@ namespace P4VHelper.ViewModel
     {
         public MainView View { get; set; }
         public MainCommander Commander { get; }
+        public BackgroundTaskMgr TaskMgr { get; }
         public ObservableCollection<Changelist> HistoryChangelists { get; }
 
         public MainViewModel()
         {
             Commander = new (this);
+            TaskMgr = new BackgroundTaskMgr(8, Dispatcher.CurrentDispatcher);
             HistoryChangelists = new ();
         }
 

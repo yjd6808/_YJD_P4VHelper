@@ -42,7 +42,7 @@ namespace P4VHelper.Model
         }
 
 
-        private BackgroundTaskMgr(int threadCount, Dispatcher dispatcher)
+        public BackgroundTaskMgr(int threadCount, Dispatcher dispatcher)
         {
             _runningTask = BackgroundTask.Default;
 
