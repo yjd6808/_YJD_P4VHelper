@@ -8,9 +8,8 @@ using System.Windows.Input;
 
 namespace P4VHelper.Base.Command
 {
-    public abstract class Command : ICommand
+    public abstract class Command : ICommand, INamedCommand
     {
-        public string Name => GetType().Name;
         public string Description { get; }
 
         public Command(string description)
@@ -36,9 +35,8 @@ namespace P4VHelper.Base.Command
         public event EventHandler? CanExecuteChanged;
     }
 
-    public abstract class Command<T> : ICommand where T : class
+    public abstract class Command<T> : ICommand, INamedCommand where T : class
     {
-        public string Name => GetType().Name;
         public string Description { get; }
         public Command(string description)
         {

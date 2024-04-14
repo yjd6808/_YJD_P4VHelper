@@ -24,35 +24,37 @@ namespace P4VHelper.Base.Util
         protected int _max;
         protected Stopwatch? _stopwatch;
         protected TimeSpan _reportInterval;    // 인터벌이 지난 경우 알림
-        protected TimeSpan _lastProgressed;    // 작업시작 마지막 작업을 수행했을 때의 경과 시작(ReportInterval을 사용하는 경우만)
+        protected TimeSpan _lastReportedElapsed;    // 작업시작 마지막 작업을 수행했을 때의 경과 시작(ReportInterval을 사용하는 경우만)
 
         public int Cur => _cur;
         public int Max => _max;
-        public float Percent => (float)_cur / _max * 100.0f;
+        public double Percent => _max > 0 ? (double)_cur / _max * 100.0f : 0.0f;
         public TimeSpan ReportInterval => _reportInterval;
 
-        public ProgressNotifer(IProgressListener listener, int max)
+        public ProgressNotifer(IProgressListener listener)
         {
             _listener = listener;
             _cur = 0;
-            _max = max;
+            _max = 0;
             _reportInterval = TimeoutEx.InfiniteSpan;
             _stopwatch = null;
         }
 
-        public ProgressNotifer(IProgressListener listener, int max, TimeSpan reportInterval)
+        public ProgressNotifer(IProgressListener listener, TimeSpan reportInterval)
         {
             _listener = listener;
             _cur = 0;
-            _max = max;
+            _max = 0;
             _reportInterval = reportInterval;
             _stopwatch = new Stopwatch();
         }
 
         public abstract void Progress();
 
-        public void Start()
+        public void Start(int max)
         {
+            _max = max;     
+
             if (_stopwatch is not null)
                 _stopwatch.Start();
         }
@@ -69,14 +71,15 @@ namespace P4VHelper.Base.Util
 
     public class EachProgressNotifier : ProgressNotifer
     {
-        public EachProgressNotifier(IProgressListener listener, int max) 
-            : base(listener, max)  {}
-        public EachProgressNotifier(IProgressListener listener, int max, TimeSpan reportInterval) 
-            : base(listener, max, reportInterval)  {}
+        public EachProgressNotifier(IProgressListener listener) 
+            : base(listener)  {}
+        public EachProgressNotifier(IProgressListener listener, TimeSpan reportInterval) 
+            : base(listener, reportInterval)  {}
 
         public override void Progress()
         {
-            Debug.Assert(_cur < _max);
+            Debug.Assert(_max > 0, "작업량(max)가 설정되지 않았습니다.");
+            Debug.Assert(_cur < _max, "Progress를 정해진 작업량(max)보다 더 많이 실행하였습니다");
             _cur++;
 
             if (_reportInterval == TimeoutEx.InfiniteSpan)
@@ -88,10 +91,11 @@ namespace P4VHelper.Base.Util
                 Debug.Assert(_stopwatch is not null);
                 TimeSpan elapsed = _stopwatch.Elapsed;
 
-                if (elapsed >= _lastProgressed + _reportInterval)
+                if (elapsed >= _lastReportedElapsed + _reportInterval)
+                {
                     Report();
-
-                _lastProgressed = elapsed;
+                    _lastReportedElapsed = elapsed;
+                }
             }
         }
     }
@@ -102,16 +106,16 @@ namespace P4VHelper.Base.Util
         private float _quantity;
         private float _nextQuantity;	// 알람을 줄 다음 스탭 갯수
 
-        public PercentProgressNotifier(IProgressListener listener, int max, float percent)
-            : base(listener, max)
+        public PercentProgressNotifier(IProgressListener listener, float percent)
+            : base(listener)
         {
             _percent = percent;
 
             Init();
         }
 
-        public PercentProgressNotifier(IProgressListener listener, int max, float percent, TimeSpan reportInterval)
-            : base(listener, max, reportInterval)
+        public PercentProgressNotifier(IProgressListener listener, float percent, TimeSpan reportInterval)
+            : base(listener, reportInterval)
         {
             _percent = percent;
 
@@ -126,7 +130,7 @@ namespace P4VHelper.Base.Util
             _nextQuantity = _quantity;
         }
 
-        private void ProcessLogic()
+        private void CalcNextQuantity()
         {
             if (_cur <= _nextQuantity)
                 return;
@@ -137,7 +141,8 @@ namespace P4VHelper.Base.Util
 
         public override void Progress()
         {
-            Debug.Assert(_cur < _max);
+            Debug.Assert(_max > 0, "작업량(max)가 설정되지 않았습니다.");
+            Debug.Assert(_cur < _max, "Progress를 정해진 작업량(max)보다 더 많이 실행하였습니다");
             _cur++;
 
             if (_cur == _max)
@@ -148,21 +153,21 @@ namespace P4VHelper.Base.Util
 
             if (_reportInterval == TimeoutEx.InfiniteSpan)
             {
-                ProcessLogic();
+                CalcNextQuantity();
             }
             else
             {
                 Debug.Assert(_stopwatch is not null);
                 TimeSpan elapsed = _stopwatch.Elapsed;
 
-                if (elapsed >= _lastProgressed + _reportInterval)
+                if (elapsed >= _lastReportedElapsed + _reportInterval)
                 {
                     Report();
+                    _lastReportedElapsed = elapsed;
                     return;
                 }
 
-                ProcessLogic();
-                _lastProgressed = elapsed;
+                CalcNextQuantity();
             }
         }
     }

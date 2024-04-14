@@ -3,20 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace P4VHelper.Base.Command
 {
     public class Commander
     {
         private bool _finalized;
-        private Dictionary<string, Command> _commandMap = new();
+        private Dictionary<string, INamedCommand> _commandMap = new();
 
-        public void Add(Command command)
+        public void Add(ICommand command)
         {
-            if (_commandMap.ContainsKey(command.Name))
-                throw new Exception($"{command.Name} 커맨드가 이미 존재합니다.");
+            INamedCommand? namedCommand = command as INamedCommand;
+            if (namedCommand == null)
+                throw new Exception("올바르지 않은 커맨드 타입입니다.");
 
-            _commandMap.Add(command.Name, command);
+            if (_commandMap.ContainsKey(namedCommand.Name))
+                throw new Exception($"{namedCommand.Name} 커맨드가 이미 존재합니다.");
+
+            _commandMap.Add(namedCommand.Name, namedCommand);
         }
 
         public void Execute(string commandName, object? param = null)
@@ -27,7 +32,7 @@ namespace P4VHelper.Base.Command
             if (!_commandMap.ContainsKey(commandName))
                 throw new Exception($"{commandName} 커맨드를 실행할 수 없습니다.");
 
-            _commandMap[commandName].Execute(param);
+            (_commandMap[commandName]as ICommand).Execute(param);
         }
 
         public void Finalize()

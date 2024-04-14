@@ -16,4 +16,13 @@ namespace P4VHelper.Command.MainView
             ViewModel = viewModel;
         }
     }
+
+    public class MainCommand<T> : Base.Command.Command<T> where T : class
+    {
+        protected MainViewModel ViewModel { get; }
+        public MainCommand(MainViewModel viewModel, string description) : base(description)
+        {
+            ViewModel = viewModel;
+        }
+    }
 }

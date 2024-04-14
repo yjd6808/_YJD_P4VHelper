@@ -4,9 +4,10 @@
                         xmlns:local="clr-namespace:P4VHelper.Customize.Converter">
 
     <local:PackUrlImageSourceConverter x:Key="PackUrlImageSourceConverter" />
-    <local:FloatToMarginConverter x:Key="FloatToMarginConverter" />
-    <local:FloatDivideConverter x:Key="FloatDivideConverter" />
-    <local:FloatAddConverter x:Key="FloatAddConverter" />
-    <local:FloatMultiplyConverter x:Key="FloatMultiplyConverter" />
+    <local:DoubleToMarginConverter x:Key="DoubleToMarginConverter" />
+    <local:DoubleDivideConverter x:Key="DoubleDivideConverter" />
+    <local:DoubleAddConverter x:Key="DoubleAddConverter" />
+    <local:DoubleMultiplyConverter x:Key="DoubleMultiplyConverter" />
+    <local:DoubleToGridLengthConverter x:Key="DoubleToGridLengthConverter" />
 
 </ResourceDictionary>

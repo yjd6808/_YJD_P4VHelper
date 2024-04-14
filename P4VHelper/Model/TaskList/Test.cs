@@ -6,15 +6,28 @@ namespace P4VHelper.Model.TaskList
     {
         public Test(BackgroundTaskMgr mgr) : base(mgr)
         {
-            Notifier = new EachProgressNotifier(this, TotalSubtaskCount);
+            Notifier = new EachProgressNotifier(this, TimeSpan.FromMilliseconds(30));
         }
 
-        public sealed override int TotalSubtaskCount => int.MaxValue;
         public override string Name => "숫자를 많이 센다";
         public override bool HasDetailView => false;
-        public override ProgressNotifer Notifier { get; }
-        public override void Do()
+
+        public override void Execute()
         {
+            int max = 1000000000 / 6;
+            Notifier.Start(max);
+
+            for (int i = 0; i < max; ++i)
+            {
+                Notifier.Progress();
+                if (IsInterruptRequested)
+                    break;
+            }
+        }
+
+        protected override void OnEndDispatched()
+        {
+            Mgr.ViewModel.Logger?.WriteDebug($"{Name} 작업 완료");
         }
     }
 }

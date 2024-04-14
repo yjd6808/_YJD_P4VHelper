@@ -1,4 +1,5 @@
 ﻿// jdyun 24/04/13(토)
+using P4VHelper.Base.Extension;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,17 +12,23 @@ using System.Windows.Media.Imaging;
 
 namespace P4VHelper.Customize.Converter
 {
-    public class FloatToMarginConverter : IValueConverter
+    public class DoubleToGridLengthConverter : IValueConverter
     {
-        public static readonly FloatToMarginConverter Instance = new();
+        public static readonly DoubleToGridLengthConverter Instance = new();
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return new Thickness(0, (float)parameter, 0, 0);
+            if (parameter == null)
+                throw new Exception("value가 null입니다.");
+
+            if (!parameter.IsNumericType())
+                throw new Exception("파라미터가 숫자 타입이어야 합니다.");
+
+            return new GridLength(System.Convert.ToDouble(parameter));
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException("구현이 안되었어요");
+            throw new NotImplementedException();
         }
     }
 }

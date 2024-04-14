@@ -13,20 +13,25 @@ using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Threading;
 using P4VHelper.Base;
+using P4VHelper.Model.TaskList;
+using P4VHelper.ViewModel;
 
 namespace P4VHelper.Model
 {
     public class BackgroundTaskMgr : Bindable
     {
         private List<BackgroundTaskThread> _threads = new ();
-        private BackgroundTask _runningTask;
+        private BackgroundTask _targetedTask;
+        private LinkedList<BackgroundTask> _runningTasks = new ();
         private bool _viewDetail;
         private CV _condVar = new ();
 
-        public BackgroundTask RunningTask => _runningTask;
+        public BackgroundTask TargetedTask => _targetedTask;
         public Queue<BackgroundTask> TaskQueue { get; } = new();
-        public ObservableCollection<BackgroundTask> TaskList { get; } = new();
+
+        public BackgroundTask DefaultTask { get; }
         public Dispatcher Dispatcher { get; }
+        public MainViewModel ViewModel { get; }
         public bool HaveRemainTask => TaskQueue.Count > 0;
         public int ThreadCount => _threads.Count;
         public int RunningThreadCount => _threads.Count(x => x.IsTaskRunning);
@@ -42,11 +47,13 @@ namespace P4VHelper.Model
         }
 
 
-        public BackgroundTaskMgr(int threadCount, Dispatcher dispatcher)
+        public BackgroundTaskMgr(int threadCount, MainViewModel viewModel)
         {
-            _runningTask = BackgroundTask.Default;
+            DefaultTask = new Default(this);
+            ViewModel = viewModel;
+            Dispatcher = viewModel.View.Dispatcher;
 
-            Dispatcher = dispatcher;
+            _targetedTask = DefaultTask;
 
             for (int i = 0; i < threadCount; ++i)
             {
@@ -60,19 +67,27 @@ namespace P4VHelper.Model
         /// 백그라운드 쓰레드를 모두 종료한다.
         /// 어떤 쓰레드에서도 호출 가능
         /// </summary>
-        public void Stop()
+        public void Stop(bool interrupt = true)
         {
             lock (this)
             {
-                foreach (var t in _threads)
-                {
-                }
-            }
+                if (interrupt)
+                    foreach (var task in _runningTasks)
+                        task._OnInterruptRequested();
 
-            _condVar.NotifyAll(this);
+                foreach (var thread in _threads)
+                    thread.IsRunning = false;
+
+                _condVar.NotifyAll(this);
+            }
 
             foreach (var t in _threads)
                 t.Join();
+        }
+
+        public void Abort()
+        {
+            throw new NotImplementedException();
         }
 
         public void Pause()
@@ -94,7 +109,10 @@ namespace P4VHelper.Model
                 _condVar.Wait(this, () => callerThread.IsRunning == false || TaskQueue.Count > 0);
 
                 if (TaskQueue.TryDequeue(out BackgroundTask? task))
+                {
+                    _runningTasks.AddLast(task);
                     return task;
+                }
             }
             return null;
         }
@@ -107,23 +125,18 @@ namespace P4VHelper.Model
         public void Run(BackgroundTask task)
         {
             task._OnWaiting();
-
             lock (this)
             {
                 TaskQueue.Enqueue(task);
+                _condVar.NotifyOne(this);
             }
-            _condVar.NotifyOne(this);
-            Dispatcher.Invoke(() => TaskList.Add(task));
         }
 
         public void OnTaskBegin(BackgroundTask task)
         {
-            task._OnBegin();
-
-            if (_runningTask.State == BackgroundTaskState.Finished)
+            if (_targetedTask.State == BackgroundTaskState.Finished)
             {
-                _runningTask = task;
-                _runningTask._OnTargeted();
+                UpdateTarget(task);
             }
 
             Dispatcher.BeginInvoke(() =>
@@ -131,16 +144,23 @@ namespace P4VHelper.Model
                 OnPropertyChanged(nameof(RunningThreadCount));
                 OnPropertyChanged(nameof(HaveRemainTask));
             });
+
+            task._OnBegin();
+        }
+
+        private void UpdateTarget(BackgroundTask task)
+        {
+            _targetedTask = task;
+            Dispatcher.BeginInvoke(() => OnPropertyChanged(nameof(TargetedTask)));
+            _targetedTask._OnTargeted();
         }
 
         public void OnTaskEnd(BackgroundTask task)
         {
-            task._OnEnd();
-
-            if (_runningTask == task)
+            if (_targetedTask == task)
             {
-                _runningTask = GetRandomRunningTask() ?? BackgroundTask.Default;
-                _runningTask._OnTargeted();
+                BackgroundTask nextTask = GetRandomRunningTask() ?? DefaultTask;
+                UpdateTarget(nextTask);
             }
 
             Dispatcher.BeginInvoke(() =>
@@ -148,15 +168,25 @@ namespace P4VHelper.Model
                 OnPropertyChanged(nameof(RunningThreadCount));
                 OnPropertyChanged(nameof(HaveRemainTask));
             });
+
+            _runningTasks.Remove(task);
+            task._OnEnd();
         }
 
         public BackgroundTask? GetRandomRunningTask()
         {
-            BackgroundTask[] arr = TaskList.Where((t) => t.State == BackgroundTaskState.Running).ToArray();
-            if (arr.Length == 0)
-                return null;
-            int idx = Random.Shared.Next(0, arr.Length);
-            return arr[idx];
+            lock (this)
+            {
+                BackgroundTask[] arr = _runningTasks.Where((t) => t.State == BackgroundTaskState.Running).ToArray();
+                if (arr.Length == 0)
+                    return null;
+                int idx = Random.Shared.Next(0, arr.Length);
+                return arr[idx];
+            }
+        }
+
+        public void SyncTaskToUI(ref ObservableCollection<BackgroundTask> tasks)
+        {
         }
     }
 }

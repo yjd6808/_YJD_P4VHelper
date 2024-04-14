@@ -23,10 +23,11 @@ namespace P4VHelper.ViewModel
         public BackgroundTaskMgr TaskMgr { get; }
         public ObservableCollection<Changelist> HistoryChangelists { get; }
 
-        public MainViewModel()
+        public MainViewModel(MainView view)
         {
+            View = view;
             Commander = new (this);
-            TaskMgr = new BackgroundTaskMgr(8, Dispatcher.CurrentDispatcher);
+            TaskMgr = new BackgroundTaskMgr(8, this);
             HistoryChangelists = new ();
         }
 

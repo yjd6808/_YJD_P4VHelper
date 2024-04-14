@@ -11,16 +11,15 @@ namespace P4VHelper.Model.TaskList
     {
         public Default(BackgroundTaskMgr mgr) : base(mgr)
         {
-            Notifier = new EachProgressNotifier(this, TotalSubtaskCount);
+            _state = BackgroundTaskState.Finished;
+            Notifier = new EachProgressNotifier(this);
         }
 
-        public override int TotalSubtaskCount => 0;
         public override string Name => "작업 없음";
-        public override bool HasDetailView { get; }
-        public override ProgressNotifer Notifier { get; }
-        public override void Do()
+        public override bool HasDetailView => false;
+        public override void Execute()
         {
-
+            throw new Exception("실행 불가능한 테스크 입니다.");
         }
     }
 }

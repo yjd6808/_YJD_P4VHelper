@@ -4,21 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using P4VHelper.Customize.Control;
 
 namespace P4VHelper.Command.MainView.List
 {
-    public class ShowStatusDetail : MainCommand
+    public class ShowStatusDetail : MainCommand<ImageToggleButton>
     {
         public ShowStatusDetail(MainViewModel viewModel) : base(viewModel, "상태바 상세보기 클릭")
         {
         }
 
-        public override void Execute()
+        public override void Execute(ImageToggleButton button)
         {
-            if (ViewModel.TaskMgr.ViewdDetail)
-                ViewModel.TaskMgr.ViewdDetail = false;
-            else
-                ViewModel.TaskMgr.ViewdDetail = true;
+            ViewModel.TaskMgr.ViewdDetail = button.Toggled;
         }
     }
 }

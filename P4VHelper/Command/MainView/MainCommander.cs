@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using P4VHelper.Base.Command;
 using P4VHelper.Command.MainView.List;
 using P4VHelper.ViewModel;
@@ -14,8 +15,8 @@ namespace P4VHelper.Command.MainView
     {
         public MainViewModel ViewModel { get; }
         
-        public Base.Command.Command Test { get; }
-        public Base.Command.Command ShowStatusDetail { get; }
+        public ICommand Test { get; }
+        public ICommand ShowStatusDetail { get; }
 
         public MainCommander(MainViewModel viewModel)
         {

@@ -16,7 +16,11 @@ namespace P4VHelper.Model
         private int _isTaskRunning;
 
         public int Id { get; }
-        public bool IsRunning => InterlockedEx.Bool.Get(ref _isRunning);
+        public bool IsRunning
+        {
+            get => InterlockedEx.Bool.Get(ref _isRunning);
+            set => InterlockedEx.Bool.Set(ref _isRunning, value);
+        }
 
         public bool IsTaskRunning
         {
@@ -35,6 +39,7 @@ namespace P4VHelper.Model
 
         public void Start()
         {
+            _isRunning = 1;
             _thread.Start();
         }
 
@@ -57,11 +62,10 @@ namespace P4VHelper.Model
                 if (task == null)
                     continue;
 
-                Mgr.OnTaskBegin(task);
                 IsTaskRunning = true;
-                task.Execute();
-                IsTaskRunning = false;
+                Mgr.OnTaskBegin(task);
                 Mgr.OnTaskEnd(task);
+                IsTaskRunning = false;
             }
         }
     }

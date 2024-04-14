@@ -22,25 +22,26 @@ namespace P4VHelper.Model
         Waiting,
         Paused,
         Running,
+        InterruptRequested, // Running 상태인데 Interrupt를 요청받은 상황
+        Interrupted,
         Finished
     }
 
     public abstract class BackgroundTask : Bindable, IProgressListener
     {
-        public static BackgroundTask Default = new Default(null);
+        protected bool _viewDetail;
+        protected BackgroundTaskState _state = BackgroundTaskState.None;      // 무조건 백그라운드 스레드에서 write가 수행됨
 
-        private bool _viewDetail;
-        private BackgroundTaskState _state = BackgroundTaskState.None;
-        private Action _action;
+        public abstract string Name { get; }                                // 작업 이름
+        public abstract bool HasDetailView { get; }                         // 자세히 보기가 가능한 테스크인가?
+        public ProgressNotifer Notifier { get; protected set; }             // Progress 알림기
+        public bool IsRunning => _state == BackgroundTaskState.Running;     // 현재 실행중인가?
+        public bool IsTargeted => Mgr.TargetedTask == this;                 // 상태표시줄에 표시되는 녀석인가?
+        public bool IsInterruptRequested => _state == BackgroundTaskState.InterruptRequested;
 
-        public abstract int TotalSubtaskCount { get; }
-        public abstract string Name { get; }
-        public abstract bool HasDetailView { get; }
-        public abstract ProgressNotifer Notifier { get; }
-
-        public string Cur => Notifier.Cur.ToString();
-        public string Max => Notifier.Max.ToString();
-        public string Percent => Notifier.Percent.ToString("0.00");
+        public string ProgressText => $"{Notifier.Cur} / {Notifier.Max} ({Notifier.Percent.ToString("0.00")}%)";
+        public double Percent => Notifier.Percent;
+        
 
         public BackgroundTaskState State => _state;
         public bool ViewDetail
@@ -59,17 +60,20 @@ namespace P4VHelper.Model
             Mgr = mgr;
         }
 
-        public abstract void Do();
+        public abstract void Execute();
 
-        public void Execute()
+        public void _OnInterruptRequested()
         {
-            int max = Notifier.Max;
+            _state = BackgroundTaskState.InterruptRequested;
 
-            for (int i = 0; i < max; ++i)
+            OnInterruptRequested();
+            Mgr.Dispatcher.BeginInvoke(() =>
             {
-                Do();
-                Notifier.Progress();
-            }
+                OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(IsRunning));
+
+                OnInterruptRequestedDispatched();
+            });
         }
 
         public void _OnBegin()
@@ -80,7 +84,28 @@ namespace P4VHelper.Model
             Mgr.Dispatcher.BeginInvoke(() =>
             {
                 OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(IsRunning));
+
                 OnBeginDispatched();
+            });
+
+            Execute();
+
+            if (IsInterruptRequested)
+                _OnInterrupted();
+        }
+
+        public void _OnInterrupted()
+        {
+            _state = BackgroundTaskState.Interrupted;
+
+            OnInterrupted();
+            Mgr.Dispatcher.BeginInvoke(() =>
+            {
+                OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(IsRunning));
+
+                OnInterruptedDispatched();
             });
         }
 
@@ -92,6 +117,8 @@ namespace P4VHelper.Model
             Mgr.Dispatcher.BeginInvoke(() =>
             {
                 OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(IsRunning));
+
                 OnWaitingDispatched();
             });
         }
@@ -102,9 +129,10 @@ namespace P4VHelper.Model
             Mgr.Dispatcher.BeginInvoke(() =>
             {
                 OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(Cur));
-                OnPropertyChanged(nameof(Max));
+                OnPropertyChanged(nameof(IsRunning));
+                OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(Percent));
+                OnPropertyChanged(nameof(ProgressText));
 
                 OnTargetedDispatched();
             });
@@ -118,6 +146,8 @@ namespace P4VHelper.Model
             Mgr.Dispatcher.BeginInvoke(() =>
             {
                 OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(IsRunning));
+
                 OnEndDispatched();
             });
         }
@@ -141,6 +171,9 @@ namespace P4VHelper.Model
             OnReported(cur);
             Mgr.Dispatcher.BeginInvoke(() =>
             {
+                OnPropertyChanged(nameof(Percent));
+                OnPropertyChanged(nameof(ProgressText));
+
                 OnReportedDispatched(cur);
             });
         }
@@ -149,6 +182,10 @@ namespace P4VHelper.Model
         protected virtual void OnBeginDispatched() {}
         protected virtual void OnWaiting() { }
         protected virtual void OnWaitingDispatched() { }
+        protected virtual void OnInterruptRequested() { }
+        protected virtual void OnInterruptRequestedDispatched() { }
+        protected virtual void OnInterrupted() { }
+        protected virtual void OnInterruptedDispatched() { }
         protected virtual void OnTargeted() { }
         protected virtual void OnTargetedDispatched() { }
         protected virtual void OnEnd() {}

@@ -17,8 +17,9 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Loaded="OnLoaded"
+        Closing="OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
-    
+
     <!--
     WindowStyle None에서 윈도우 리사이즈 방법
     @참고: https://stackoverflow.com/questions/611298/how-to-create-a-wpf-window-without-a-border-that-can-be-resized-via-a-grip-only
@@ -31,33 +32,20 @@
 
         <Grid.Height>
             <!--
-            메인그리드는 사용자에게 보여줄 패널과 패널을 벗어난 상태바를 포함한다.
+            MainGrid는 사용자에게 보여줄 패널과 패널을 벗어난 상태바를 포함한다.
             @참고: https://stackoverflow.com/questions/3340821/how-can-i-pass-a-constant-value-for-1-binding-in-multi-binding
-            멀티바인딩을 활용하여 여러개의 인자(MainWindow.Height와 StatusBarDivision)를 전달할 수 있다.
+            멀티바인딩을 활용하여 여러개의 인자(MainWindow.Height와 MAIN_GRID_HEIGHT_MULTIPLIER)를 전달할 수 있다.
             -->
-            <MultiBinding Converter="{StaticResource FloatMultiplyConverter}">
+            <MultiBinding Converter="{StaticResource DoubleMultiplyConverter}">
                 <Binding ElementName="MainWindow"
                          Path="Height" />
-                <Binding Source="{x:Static l:Constant.StatusBarDivision}" />
+                <Binding Source="{x:Static l:Constant.MAIN_GRID_HEIGHT_MULTIPLIER}" />
             </MultiBinding>
         </Grid.Height>
-        <Grid.RowDefinitions>
-            <!-- 메인 패널 높이-->
-            <RowDefinition Height="{Binding Height}"></RowDefinition>
-
-            <!-- 가려진 상태바 높이(가상의 영역)-->
-            <RowDefinition>
-                <RowDefinition.Height>
-                    <MultiBinding Converter="{StaticResource FloatDivideConverter}">
-                        <Binding ElementName="MainWindow"
-                                 Path="Height" />
-                        <Binding Source="{x:Static l:Constant.StatusBarDivision}" />
-                    </MultiBinding>
-                </RowDefinition.Height>
-            </RowDefinition>
-        </Grid.RowDefinitions>
-
-        <Grid Grid.Row="0">
+        <Grid Name="MainPanelGrid"
+              Grid.Row="0"
+              Height="{Binding Height}"
+              VerticalAlignment="Top">
             <Grid.RowDefinitions>
                 <!--타이틀바 높이-->
                 <RowDefinition Height="30" />
@@ -72,19 +60,19 @@
                 <RowDefinition Height="300" />
 
                 <!--상태줄 높이-->
-                <RowDefinition Height="30" />
+                <RowDefinition Height="{Binding Converter={StaticResource DoubleToGridLengthConverter}, ConverterParameter={x:Static l:Constant.STATUS_BAR_HEIGHT}}" />
             </Grid.RowDefinitions>
 
             <!-- 메뉴 -->
             <uc:TitleBar x:Name="TitlePanel"
                          FontSize="16"
-                         Title="{x:Static l:Constant.Title}"
+                         Title="{x:Static l:Constant.TITLE}"
                          DockPanel.Dock="Top"
                          TitleContentMargin="0, 0, 5, 0"
-                         TitleContent="{Binding Source={x:Static l:Constant.Title}}">
+                         TitleContent="{Binding Source={x:Static l:Constant.TITLE}}">
                 <uc:TitleBar.TitleContentTemplate>
                     <DataTemplate>
-                        <TextBlock Text="테스트"/>
+                        <TextBlock Text="테스트" />
                     </DataTemplate>
                 </uc:TitleBar.TitleContentTemplate>
             </uc:TitleBar>
@@ -192,18 +180,123 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="30" />
                 </Grid.ColumnDefinitions>
+                
+                <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight" HorizontalAlignment="Right">
+                    <Grid Width="150" Height="30">
+                        <ProgressBar Background="Aquamarine"
+                                     Value="{Binding ViewModel.TaskMgr.TargetedTask.Percent, Mode=OneWay}"
+                                     Maximum="100.0" />
+                        <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.ProgressText, Mode=OneWay}"/>
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewModel.TaskMgr.TargetedTask.IsRunning, Mode=OneWay}"
+                                                 Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ViewModel.TaskMgr.TargetedTask.IsRunning, Mode=OneWay}"
+                                                 Value="False">
+                                        <Setter Property="Visibility"
+                                                Value="Hidden" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                    </Grid>
+                    <TextBlock Text="5"
+                               Margin="0, 0, 3, 0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
 
                 <uc:ImageToggleButton Grid.Column="1"
                                       NormalImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_UP_KEY}}"
                                       ToggledImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_DOWN_KEY}}"
                                       Toggled="{Binding ViewModel.TaskMgr.ViewdDetail}"
-                                      Command="{Binding ViewModel.Commander.ShowStatusDetail}">
+                                      Command="{Binding ViewModel.Commander.ShowStatusDetail}"
+                                      CommandParameter="{Binding RelativeSource={RelativeSource Self}}">
                 </uc:ImageToggleButton>
+
+                <Grid.Style>
+                    <Style TargetType="Grid">
+
+                    </Style>
+                </Grid.Style>
             </Grid>
         </Grid>
-        <Grid Grid.Row="1"
-              Background="AntiqueWhite"
+        <Grid Name="StatusExpandedGrid"
+              Background="White"
               VerticalAlignment="Bottom">
+            <Grid.Height>
+
+                <!--
+                    코드로는 이렇게 작성가능함
+                    MultiBinding multiBinding = new MultiBinding();
+                    multiBinding.Converter = new DoubleDivideConverter();
+
+                    Binding mainWindowHeightBinding = new Binding();
+                    mainWindowHeightBinding.ElementName = "MainWindow";
+                    mainWindowHeightBinding.Path = new PropertyPath("Height");
+
+                    Binding constantBinding = new Binding();
+                    constantBinding.Source = Constant.STATUS_BAR_DIVISION;
+
+                    multiBinding.Bindings.Add(mainWindowHeightBinding);
+                    multiBinding.Bindings.Add(constantBinding);
+
+                    StatusExpandedGrid.SetBinding(Grid.HeightProperty, multiBinding);
+                -->
+
+                <!--확장 상태바 높이는 MainWindow / STATUS_BAR_EXPANDED_DIVISION 을 유지하도록 한다.-->
+                <MultiBinding Converter="{StaticResource DoubleDivideConverter}">
+                    <Binding ElementName="MainWindow"
+                             Path="ActualHeight" />
+                    <Binding Source="{x:Static l:Constant.STATUS_BAR_EXPANDED_DIVISION}" />
+                </MultiBinding>
+            </Grid.Height>
+            <Grid.Style>
+
+                <!--확장 상태바 마진(MainGrid상에서의 위치)은 확장 상태바 토글 버튼의 상태(백그라운드 테스크 매니저의 ViewDetail 변수의 상태)에 따라
+                  안보일 때는 마진 탑을 윈도우 높이로
+                  보일 때는 마진 바텀을 상태바 높이 + 확장 상태바 높이로 조정하도록 한다. (Drawer 효과 구현을 위함)
+                  -->
+
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ViewModel.TaskMgr.ViewdDetail}"
+                                     Value="False">
+                            <Setter Property="Grid.Margin">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource DoubleToMarginConverter}">
+                                        <Binding Source="{x:Static l:Constant.ZERO}" />
+                                        <Binding ElementName="MainWindow"
+                                                 Path="Height" />
+                                        <Binding Source="{x:Static l:Constant.ZERO}" />
+                                        <Binding Source="{x:Static l:Constant.ZERO}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ViewModel.TaskMgr.ViewdDetail}"
+                                     Value="True">
+                            <Setter Property="Grid.Margin">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource DoubleToMarginConverter}">
+                                        <Binding Source="{x:Static l:Constant.ZERO}" />
+                                        <Binding Source="{x:Static l:Constant.ZERO}" />
+                                        <Binding Source="{x:Static l:Constant.ZERO}" />
+                                        <Binding ElementName="StatusExpandedGrid"
+                                                 Path="Height" />
+                                        <Binding Source="{x:Static l:Constant.STATUS_BAR_HEIGHT_THICKNESS}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <!--확장 상태바 내용-->
+
         </Grid>
     </Grid>
 </Window>

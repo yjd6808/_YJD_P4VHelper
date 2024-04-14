@@ -12,9 +12,9 @@ using P4VHelper.Base.Extension;
 
 namespace P4VHelper.Customize.Converter
 {
-    public class FloatDivideConverter : IMultiValueConverter
+    public class DoubleAddConverter : IMultiValueConverter
     {
-        public static readonly FloatDivideConverter Instance = new();
+        public static readonly DoubleAddConverter Instance = new();
 
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
@@ -24,8 +24,8 @@ namespace P4VHelper.Customize.Converter
             if (!values.All(x => x.IsNumericType()))
                 throw new Exception("파라미터가 숫자 타입이어야 합니다.");
 
-            float r = System.Convert.ToSingle(values[0]) / System.Convert.ToSingle(values[1]);
-            return r;
+            double add = System.Convert.ToDouble(values[0]) + System.Convert.ToDouble(values[1]);
+            return add;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

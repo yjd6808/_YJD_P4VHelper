@@ -12,8 +12,6 @@ namespace P4VHelper.Base.Command
 {
     public abstract class CommandAsync : Command
     {
-        public string Name => GetType().Name;
-        public string Description { get; } = string.Empty;
         public Action<Exception>? ErrorHandler { get; }
         public CommandAsync(string description, Action<Exception>? errorHandler) : base(description)
         {
@@ -36,8 +34,6 @@ namespace P4VHelper.Base.Command
 
     public abstract class CommandAsync<T> : Command<T> where T : class
     {
-        public string Name => GetType().Name;
-        public string Description { get; }
         public Action<Exception>? ErrorHandler { get; }
         public CommandAsync(string description, Action<Exception>? errorHandler) : base(description)
         {

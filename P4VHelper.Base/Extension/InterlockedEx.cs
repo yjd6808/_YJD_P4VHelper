@@ -41,15 +41,15 @@ namespace P4VHelper.Base.Extension
         {
             public static bool Get(ref int target)
             {
-                return Interlocked.CompareExchange(ref target, 1, 1) == 1;
+                return Convert.ToBoolean(Interlocked.CompareExchange(ref target, 1, 1));
             }
 
-            public static bool Set(ref int target, bool value)
+            public static int Set(ref int target, bool value)
             {
                 if (value)
-                    return Interlocked.CompareExchange(ref target, 1, 1) == 1;
+                    return Interlocked.CompareExchange(ref target, 1, 0);
 
-                return Interlocked.CompareExchange(ref target, 0, 0) == 0;
+                return Interlocked.CompareExchange(ref target, 0, 1);
             }
         }
     }
