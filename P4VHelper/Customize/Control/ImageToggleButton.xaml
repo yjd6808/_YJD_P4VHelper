@@ -7,7 +7,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:ImageToggleButton">
-                    <StackPanel Orientation="Vertical">
+                    <Grid>
                         <Image Width="{TemplateBinding Width}"
                                Height="{TemplateBinding Height}"
                                Source="{Binding Path=CurrentImageSource, 
@@ -15,8 +15,8 @@
                         </Image>
                         <ContentPresenter Content="{Binding Path=Content, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:ImageToggleButton}}}">
                         </ContentPresenter>
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver"
                                              Value="True">
@@ -30,8 +30,8 @@
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
-                        </StackPanel.Style>
-                    </StackPanel>
+                        </Grid.Style>
+                    </Grid>
 
                 </ControlTemplate>
             </Setter.Value>

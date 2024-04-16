@@ -9,5 +9,7 @@
     <local:DoubleAddConverter x:Key="DoubleAddConverter" />
     <local:DoubleMultiplyConverter x:Key="DoubleMultiplyConverter" />
     <local:DoubleToGridLengthConverter x:Key="DoubleToGridLengthConverter" />
+    <local:StringConverter x:Key="StringConverter" />
+    <local:StringFormatConverter x:Key="StringFormatConverter" />
 
 </ResourceDictionary>

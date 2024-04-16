@@ -180,38 +180,83 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="30" />
                 </Grid.ColumnDefinitions>
-                
-                <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight" HorizontalAlignment="Right">
-                    <Grid Width="150" Height="30">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="40" />
+                    </Grid.ColumnDefinitions>
+                    <Grid ToolTip="작업 이름을 나타냅니다.">
+                        <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.Name}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Grid.Column="1"
+                          ToolTip="실행중인 작업의 진행정도를 나타냅니다.">
                         <ProgressBar Background="Aquamarine"
                                      Value="{Binding ViewModel.TaskMgr.TargetedTask.Percent, Mode=OneWay}"
                                      Maximum="100.0" />
-                        <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.ProgressText, Mode=OneWay}"/>
-                        <Grid.Style>
-                            <Style TargetType="Grid">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ViewModel.TaskMgr.TargetedTask.IsRunning, Mode=OneWay}"
-                                                 Value="True">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding ViewModel.TaskMgr.TargetedTask.IsRunning, Mode=OneWay}"
-                                                 Value="False">
-                                        <Setter Property="Visibility"
-                                                Value="Hidden" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Grid.Style>
+                        <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.ProgressText, Mode=OneWay}" />
                     </Grid>
-                    <TextBlock Text="5"
-                               Margin="0, 0, 3, 0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="2"
+                                ToolTip="작업을 실행중인 쓰레드 수를 의미합니다."
+                                Orientation="Horizontal"
+                                FlowDirection="LeftToRight">
+                        <Image Source="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_RUN_KEY}}" />
+                        <TextBlock VerticalAlignment="Center">
+
+                            <!-- 
+                            컨버터 파라미터에 바인딩 하는 방법.
+                            @참고: https://stackoverflow.com/questions/15309008/binding-converterparameter 
+                            바인딩 할 수 없으니... value에 담아서 전달해버리네 ㅎㄷㄷ
+                            -->
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource StringConverter}">
+                                    <Binding Path="ViewModel.TaskMgr.TotalTaskCount" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                    <StackPanel Grid.Column="3"
+                                ToolTip="작업을 실행중인 쓰레드 수를 의미합니다."
+                                Orientation="Horizontal"
+                                FlowDirection="LeftToRight">
+                        <Image Source="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_SPARK_KEY}}" />
+                        <TextBlock VerticalAlignment="Center">
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource StringConverter}">
+                                    <Binding Path="ViewModel.TaskMgr.RunningThreadCount" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!--
+                    작업을 실행중인 경우만 작업표시줄의 상황을 보여준다.
+                    <-->
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ViewModel.TaskMgr.TargetedTask.IsRunning, Mode=OneWay}"
+                                             Value="True">
+                                    <Setter Property="Visibility"
+                                            Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ViewModel.TaskMgr.TargetedTask.IsRunning, Mode=OneWay}"
+                                             Value="False">
+                                    <Setter Property="Visibility"
+                                            Value="Hidden" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                </Grid>
 
                 <uc:ImageToggleButton Grid.Column="1"
                                       NormalImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_UP_KEY}}"
                                       ToggledImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_DOWN_KEY}}"
-                                      Toggled="{Binding ViewModel.TaskMgr.ViewdDetail}"
+                                      Toggled="{Binding ViewModel.TaskMgr.ViewDetail}"
                                       Command="{Binding ViewModel.Commander.ShowStatusDetail}"
                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}}">
                 </uc:ImageToggleButton>
@@ -262,7 +307,7 @@
 
                 <Style TargetType="Grid">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding ViewModel.TaskMgr.ViewdDetail}"
+                        <DataTrigger Binding="{Binding ViewModel.TaskMgr.ViewDetail}"
                                      Value="False">
                             <Setter Property="Grid.Margin">
                                 <Setter.Value>
@@ -276,7 +321,7 @@
                                 </Setter.Value>
                             </Setter>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding ViewModel.TaskMgr.ViewdDetail}"
+                        <DataTrigger Binding="{Binding ViewModel.TaskMgr.ViewDetail}"
                                      Value="True">
                             <Setter Property="Grid.Margin">
                                 <Setter.Value>

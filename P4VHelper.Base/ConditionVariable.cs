@@ -23,11 +23,13 @@ namespace P4VHelper.Base
     {
         public CVResult Wait(object locker, Func<bool> predicate)
         {
+            Debug.Assert(Monitor.IsEntered(locker));
             return Wait(locker, predicate, Timeout.InfiniteTimeSpan);
         }
 
         public CVResult Wait(object locker, Func<bool> predicate, int timeout)
         {
+            Debug.Assert(Monitor.IsEntered(locker));
             return Wait(locker, predicate, new TimeSpan(0, 0, 0, 0, timeout));
         }
 
@@ -48,11 +50,13 @@ namespace P4VHelper.Base
 
         public void NotifyOne(object locker)
         {
+            Debug.Assert(Monitor.IsEntered(locker));
             Monitor.Pulse(locker);
         }
 
         public void NotifyAll(object locker)
         {
+            Debug.Assert(Monitor.IsEntered(locker));
             Monitor.PulseAll(locker);
         }
     }

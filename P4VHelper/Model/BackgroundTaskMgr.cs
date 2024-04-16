@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Threading;
 using P4VHelper.Base;
+using P4VHelper.Base.Extension;
 using P4VHelper.Model.TaskList;
 using P4VHelper.ViewModel;
 
@@ -20,23 +21,76 @@ namespace P4VHelper.Model
 {
     public class BackgroundTaskMgr : Bindable
     {
-        private List<BackgroundTaskThread> _threads = new ();
+        private List<BackgroundTaskThread> _threads;
         private BackgroundTask _targetedTask;
-        private LinkedList<BackgroundTask> _runningTasks = new ();
         private bool _viewDetail;
-        private CV _condVar = new ();
-
-        public BackgroundTask TargetedTask => _targetedTask;
-        public Queue<BackgroundTask> TaskQueue { get; } = new();
+        private CV _condVar;
 
         public BackgroundTask DefaultTask { get; }
         public Dispatcher Dispatcher { get; }
         public MainViewModel ViewModel { get; }
-        public bool HaveRemainTask => TaskQueue.Count > 0;
-        public int ThreadCount => _threads.Count;
-        public int RunningThreadCount => _threads.Count(x => x.IsTaskRunning);
 
-        public bool ViewdDetail
+        /// <summary>
+        /// 상태표시줄에 표시할 작업
+        /// </summary>
+        public BackgroundTask TargetedTask => _targetedTask;
+
+        /// <summary>
+        /// 대기중인 작업 목록
+        /// </summary>
+        public LinkedList<BackgroundTask> WaitingTaskList { get; }
+
+        /// <summary>
+        /// 실행중인 작업 목록
+        /// </summary>
+        public LinkedList<BackgroundTask> RunningTaskList { get; }
+
+        /// <summary>
+        /// 대기중인 작업 수
+        /// </summary>
+        public bool WaitingTaskCount
+        {
+            get => LockEx.Do(this, () => WaitingTaskList.Count > 0);
+        }
+
+        /// <summary>
+        /// 실행중이거나 대기중인 작업 수
+        /// </summary>
+        public int TotalTaskCount
+        {
+            get
+            {
+                int totalCount = 0;
+                lock (this)
+                {
+                    totalCount += RunningTaskList.Count;
+                    totalCount += WaitingTaskList.Count;
+                }
+                return totalCount;
+            }
+        }
+
+        /// <summary>
+        /// 실행중인 쓰레드 수
+        /// </summary>
+        public int ThreadCount
+        {
+            get => _threads.Count;
+        }
+
+        /// <summary>
+        /// 작업을 진행중인 쓰레드 수
+        /// </summary>
+        public int RunningThreadCount
+        {
+            get => _threads.Count(x => x.IsTaskRunning);
+        }
+
+
+        /// <summary>
+        /// 작업표시줄 자세히보기 활성화 여부
+        /// </summary>
+        public bool ViewDetail
         {
             get => _viewDetail;
             set
@@ -46,14 +100,18 @@ namespace P4VHelper.Model
             }
         }
 
-
         public BackgroundTaskMgr(int threadCount, MainViewModel viewModel)
         {
             DefaultTask = new Default(this);
             ViewModel = viewModel;
             Dispatcher = viewModel.View.Dispatcher;
+            WaitingTaskList = new LinkedList<BackgroundTask>();
+            RunningTaskList = new LinkedList<BackgroundTask>();
 
+            _threads = new List<BackgroundTaskThread>();
             _targetedTask = DefaultTask;
+            _viewDetail = false;
+            _condVar = new CV();
 
             for (int i = 0; i < threadCount; ++i)
             {
@@ -72,7 +130,7 @@ namespace P4VHelper.Model
             lock (this)
             {
                 if (interrupt)
-                    foreach (var task in _runningTasks)
+                    foreach (var task in RunningTaskList)
                         task._OnInterruptRequested();
 
                 foreach (var thread in _threads)
@@ -106,11 +164,12 @@ namespace P4VHelper.Model
         {
             lock (this)
             {
-                _condVar.Wait(this, () => callerThread.IsRunning == false || TaskQueue.Count > 0);
+                _condVar.Wait(this, () => callerThread.IsRunning == false || WaitingTaskList.Count > 0);
 
-                if (TaskQueue.TryDequeue(out BackgroundTask? task))
+                if (WaitingTaskList.Count > 0)
                 {
-                    _runningTasks.AddLast(task);
+                    BackgroundTask task =  WaitingTaskList.First.Value;
+                    WaitingTaskList.RemoveFirst();
                     return task;
                 }
             }
@@ -127,7 +186,7 @@ namespace P4VHelper.Model
             task._OnWaiting();
             lock (this)
             {
-                TaskQueue.Enqueue(task);
+                WaitingTaskList.AddLast(task);
                 _condVar.NotifyOne(this);
             }
         }
@@ -142,9 +201,10 @@ namespace P4VHelper.Model
             Dispatcher.BeginInvoke(() =>
             {
                 OnPropertyChanged(nameof(RunningThreadCount));
-                OnPropertyChanged(nameof(HaveRemainTask));
+                OnPropertyChanged(nameof(TotalTaskCount));
             });
 
+            RunningTaskList.AddLast(task);
             task._OnBegin();
         }
 
@@ -166,10 +226,10 @@ namespace P4VHelper.Model
             Dispatcher.BeginInvoke(() =>
             {
                 OnPropertyChanged(nameof(RunningThreadCount));
-                OnPropertyChanged(nameof(HaveRemainTask));
+                OnPropertyChanged(nameof(TotalTaskCount));
             });
 
-            _runningTasks.Remove(task);
+            RunningTaskList.Remove(task);
             task._OnEnd();
         }
 
@@ -177,7 +237,7 @@ namespace P4VHelper.Model
         {
             lock (this)
             {
-                BackgroundTask[] arr = _runningTasks.Where((t) => t.State == BackgroundTaskState.Running).ToArray();
+                BackgroundTask[] arr = RunningTaskList.Where((t) => t.State == BackgroundTaskState.Running).ToArray();
                 if (arr.Length == 0)
                     return null;
                 int idx = Random.Shared.Next(0, arr.Length);

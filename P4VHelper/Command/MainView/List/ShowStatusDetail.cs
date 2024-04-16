@@ -17,7 +17,7 @@ namespace P4VHelper.Command.MainView.List
 
         public override void Execute(ImageToggleButton button)
         {
-            ViewModel.TaskMgr.ViewdDetail = button.Toggled;
+            ViewModel.TaskMgr.ViewDetail = button.Toggled;
         }
     }
 }

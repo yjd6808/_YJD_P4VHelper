@@ -36,6 +36,7 @@
     <None Remove="Resource\Icons\common_rect.ico" />
     <None Remove="Resource\Icons\common_refresh.ico" />
     <None Remove="Resource\Icons\common_reset.ico" />
+    <None Remove="Resource\Icons\common_run.ico" />
     <None Remove="Resource\Icons\common_select.ico" />
     <None Remove="Resource\Icons\common_spark.ico" />
     <None Remove="Resource\Icons\common_transparent.ico" />
@@ -87,6 +88,7 @@
     <Resource Include="Resource\Icons\common_rect.ico" />
     <Resource Include="Resource\Icons\common_refresh.ico" />
     <Resource Include="Resource\Icons\common_reset.ico" />
+    <Resource Include="Resource\Icons\common_run.ico" />
     <Resource Include="Resource\Icons\common_select.ico" />
     <Resource Include="Resource\Icons\common_spark.ico" />
     <Resource Include="Resource\Icons\common_transparent.ico" />

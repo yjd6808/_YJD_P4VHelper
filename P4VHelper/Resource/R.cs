@@ -45,7 +45,8 @@ namespace P4VHelper.Resource
         Transparent,
         Unclip,
         Unlock,
-        Up
+        Up,
+        Run
     }
 
     internal class R
@@ -83,6 +84,7 @@ namespace P4VHelper.Resource
         public const string ICON_TRANSPARENT_KEY = ICON_PATH + "common_transparent.ico";
         public const string ICON_UNCLIP_KEY = ICON_PATH + "common_unclip.ico";
         public const string ICON_UNLOCK_KEY = ICON_PATH + "common_unlock.ico";
+        public const string ICON_RUN_KEY = ICON_PATH + "common_run.ico";
 
         private static string GetIconKey(IconType type)
         {
@@ -117,6 +119,7 @@ namespace P4VHelper.Resource
                 case IconType.Transparent: return ICON_TRANSPARENT_KEY;
                 case IconType.Unclip: return ICON_UNCLIP_KEY;
                 case IconType.Unlock: return ICON_UNLOCK_KEY;
+                case IconType.Run: return ICON_RUN_KEY;
                 default: throw new ArgumentException("Unknown icon type");
             }
         }

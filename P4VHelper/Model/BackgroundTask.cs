@@ -30,7 +30,7 @@ namespace P4VHelper.Model
     public abstract class BackgroundTask : Bindable, IProgressListener
     {
         protected bool _viewDetail;
-        protected BackgroundTaskState _state = BackgroundTaskState.None;      // 무조건 백그라운드 스레드에서 write가 수행됨
+        protected BackgroundTaskState _state;                               // 무조건 백그라운드 스레드에서 write가 수행됨
 
         public abstract string Name { get; }                                // 작업 이름
         public abstract bool HasDetailView { get; }                         // 자세히 보기가 가능한 테스크인가?
@@ -57,6 +57,9 @@ namespace P4VHelper.Model
         public BackgroundTaskMgr Mgr { get; }
         public BackgroundTask(BackgroundTaskMgr mgr)
         {
+            _state = BackgroundTaskState.None;
+            _viewDetail = false;
+
             Mgr = mgr;
         }
 
