@@ -46,7 +46,8 @@ namespace P4VHelper.Resource
         Unclip,
         Unlock,
         Up,
-        Run
+        Run,
+        Progress,
     }
 
     internal class R
@@ -54,37 +55,37 @@ namespace P4VHelper.Resource
         public const string RES_PATH = "pack://application:,,,/P4VHelper;component/Resource/";
         public const string ICON_PATH = RES_PATH + "Icons/";
 
-        public const string ICON_HISTORY_KEY = ICON_PATH + "history.png";
-        public const string ICON_MINIMIZE_KEY = ICON_PATH + "win_minimize.ico";
-        public const string ICON_MAXIMIZE_KEY = ICON_PATH + "win_maximize.ico";
-        public const string ICON_CLOSE_KEY = ICON_PATH + "win_close.ico";
-
-        public const string ICON_PIN_KEY = ICON_PATH + "common_pin.ico";
-        public const string ICON_UNPIN_KEY = ICON_PATH + "common_unpin.ico";
-        public const string ICON_UP_KEY = ICON_PATH + "common_up.ico";
-        public const string ICON_ALBUM_KEY = ICON_PATH + "common_album.ico";
-        public const string ICON_ANCHOR_KEY = ICON_PATH + "common_anchor.ico";
-        public const string ICON_BACKUP_KEY = ICON_PATH + "common_backup.ico";
-        public const string ICON_CHECKED_KEY = ICON_PATH + "common_checked.ico";
-        public const string ICON_COLLAPSE_KEY = ICON_PATH + "common_collapse.ico";
-        public const string ICON_DELETE_KEY = ICON_PATH + "common_delete.ico";
-        public const string ICON_DOWN_KEY = ICON_PATH + "common_down.ico";
-        public const string ICON_EMPTY_KEY = ICON_PATH + "common_empty.ico";
-        public const string ICON_GRID_KEY = ICON_PATH + "common_grid.ico";
-        public const string ICON_INFO_KEY = ICON_PATH + "common_info.ico";
-        public const string ICON_LINK_KEY = ICON_PATH + "common_link.ico";
-        public const string ICON_MUSIC_KEY = ICON_PATH + "common_music.ico";
-        public const string ICON_NOT_USABLE_KEY = ICON_PATH + "common_not_usable.ico";
-        public const string ICON_POSITION_KEY = ICON_PATH + "common_position.ico";
-        public const string ICON_RECT_KEY = ICON_PATH + "common_rect.ico";
-        public const string ICON_REFRESH_KEY = ICON_PATH + "common_refresh.ico";
-        public const string ICON_RESET_KEY = ICON_PATH + "common_reset.ico";
-        public const string ICON_SELECT_KEY = ICON_PATH + "common_select.ico";
-        public const string ICON_SPARK_KEY = ICON_PATH + "common_spark.ico";
-        public const string ICON_TRANSPARENT_KEY = ICON_PATH + "common_transparent.ico";
-        public const string ICON_UNCLIP_KEY = ICON_PATH + "common_unclip.ico";
-        public const string ICON_UNLOCK_KEY = ICON_PATH + "common_unlock.ico";
-        public const string ICON_RUN_KEY = ICON_PATH + "common_run.ico";
+        public const string ICON_HISTORY_KEY = "history.png";
+        public const string ICON_MINIMIZE_KEY = "win_minimize.ico";
+        public const string ICON_MAXIMIZE_KEY = "win_maximize.ico";
+        public const string ICON_CLOSE_KEY = "win_close.ico";
+        public const string ICON_PIN_KEY = "common_pin.ico";
+        public const string ICON_UNPIN_KEY = "common_unpin.ico";
+        public const string ICON_UP_KEY = "common_up.ico";
+        public const string ICON_ALBUM_KEY = "common_album.ico";
+        public const string ICON_ANCHOR_KEY = "common_anchor.ico";
+        public const string ICON_BACKUP_KEY = "common_backup.ico";
+        public const string ICON_CHECKED_KEY = "common_checked.ico";
+        public const string ICON_COLLAPSE_KEY = "common_collapse.ico";
+        public const string ICON_DELETE_KEY = "common_delete.ico";
+        public const string ICON_DOWN_KEY = "common_down.ico";
+        public const string ICON_EMPTY_KEY = "common_empty.ico";
+        public const string ICON_GRID_KEY = "common_grid.ico";
+        public const string ICON_INFO_KEY = "common_info.ico";
+        public const string ICON_LINK_KEY = "common_link.ico";
+        public const string ICON_MUSIC_KEY = "common_music.ico";
+        public const string ICON_NOT_USABLE_KEY = "common_not_usable.ico";
+        public const string ICON_POSITION_KEY = "common_position.ico";
+        public const string ICON_RECT_KEY = "common_rect.ico";
+        public const string ICON_REFRESH_KEY = "common_refresh.ico";
+        public const string ICON_RESET_KEY = "common_reset.ico";
+        public const string ICON_SELECT_KEY = "common_select.ico";
+        public const string ICON_SPARK_KEY = "common_spark.ico";
+        public const string ICON_TRANSPARENT_KEY = "common_transparent.ico";
+        public const string ICON_UNCLIP_KEY = "common_unclip.ico";
+        public const string ICON_UNLOCK_KEY = "common_unlock.ico";
+        public const string ICON_RUN_KEY = "common_run.ico";
+        public const string ICON_PROGRESS_KEY = "common_progress.ico";
 
         private static string GetIconKey(IconType type)
         {
@@ -120,6 +121,7 @@ namespace P4VHelper.Resource
                 case IconType.Unclip: return ICON_UNCLIP_KEY;
                 case IconType.Unlock: return ICON_UNLOCK_KEY;
                 case IconType.Run: return ICON_RUN_KEY;
+                case IconType.Progress: return ICON_PROGRESS_KEY;
                 default: throw new ArgumentException("Unknown icon type");
             }
         }

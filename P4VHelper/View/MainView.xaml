@@ -91,7 +91,7 @@
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_HISTORY_KEY}}" />
+                            <Image Source="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_HISTORY_KEY}}" />
                             <TextBlock Text="History"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -156,9 +156,9 @@
                                     <DataGridTextColumn Header="UserName"
                                                         Width="80"
                                                         Binding="{Binding UserName}" />
-                                    <DataGridTextColumn Header="Descryption"
+                                    <DataGridTextColumn Header="Description"
                                                         Width="*"
-                                                        Binding="{Binding Descryption}" />
+                                                        Binding="{Binding Description}" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
@@ -183,27 +183,42 @@
 
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <!-- 테스크 뷰 -->
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="200" />
+
+                        <!-- 작업 수 -->
                         <ColumnDefinition Width="40" />
+
+                        <!-- 쓰레드 수 -->
                         <ColumnDefinition Width="40" />
                     </Grid.ColumnDefinitions>
-                    <Grid ToolTip="작업 이름을 나타냅니다.">
-                        <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.Name}"
-                                   VerticalAlignment="Center" />
-                    </Grid>
-                    <Grid Grid.Column="1"
-                          ToolTip="실행중인 작업의 진행정도를 나타냅니다.">
-                        <ProgressBar Background="Aquamarine"
-                                     Value="{Binding ViewModel.TaskMgr.TargetedTask.Percent, Mode=OneWay}"
-                                     Maximum="100.0" />
-                        <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.ProgressText, Mode=OneWay}" />
-                    </Grid>
-                    <StackPanel Grid.Column="2"
-                                ToolTip="작업을 실행중인 쓰레드 수를 의미합니다."
+
+                    <uc:BackgroundTaskCtrl DataContext="{Binding ViewModel.TaskMgr.TargetedTask}">
+                    </uc:BackgroundTaskCtrl>
+
+                    <!--<Grid>
+
+                        
+
+                        <Grid ToolTip="작업 이름을 나타냅니다.">
+                            <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.Name}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                        <Grid Grid.Column="1"
+                              ToolTip="실행중인 작업의 진행정도를 나타냅니다.">
+                            <ProgressBar Background="Aquamarine"
+                                         Value="{Binding ViewModel.TaskMgr.TargetedTask.Percent, Mode=OneWay}"
+                                         Maximum="100.0" />
+                            <TextBlock Text="{Binding ViewModel.TaskMgr.TargetedTask.ProgressText, Mode=OneWay}" />
+                        </Grid>
+
+                    </Grid>-->
+                    
+                    <StackPanel Grid.Column="1"
+                                ToolTip="실행중이거나 실행 대기중인 작업 수"
                                 Orientation="Horizontal"
                                 FlowDirection="LeftToRight">
-                        <Image Source="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_RUN_KEY}}" />
+                        <Image Source="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_RUN_KEY}}" />
                         <TextBlock VerticalAlignment="Center">
 
                             <!-- 
@@ -218,11 +233,11 @@
                             </TextBlock.Text>
                         </TextBlock>
                     </StackPanel>
-                    <StackPanel Grid.Column="3"
+                    <StackPanel Grid.Column="2"
                                 ToolTip="작업을 실행중인 쓰레드 수를 의미합니다."
                                 Orientation="Horizontal"
                                 FlowDirection="LeftToRight">
-                        <Image Source="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_SPARK_KEY}}" />
+                        <Image Source="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_SPARK_KEY}}" />
                         <TextBlock VerticalAlignment="Center">
                             <TextBlock.Text>
                                 <MultiBinding Converter="{StaticResource StringConverter}">
@@ -254,8 +269,8 @@
                 </Grid>
 
                 <uc:ImageToggleButton Grid.Column="1"
-                                      NormalImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_UP_KEY}}"
-                                      ToggledImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static res:R.ICON_DOWN_KEY}}"
+                                      NormalImageSource="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_UP_KEY}}"
+                                      ToggledImageSource="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_DOWN_KEY}}"
                                       Toggled="{Binding ViewModel.TaskMgr.ViewDetail}"
                                       Command="{Binding ViewModel.Commander.ShowStatusDetail}"
                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}}">

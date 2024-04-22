@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using P4VHelper.Base.Util;
+using P4VHelper.Base.Notifier;
 
 namespace P4VHelper.Model.TaskList
 {
@@ -12,7 +12,8 @@ namespace P4VHelper.Model.TaskList
         public Default(BackgroundTaskMgr mgr) : base(mgr)
         {
             _state = BackgroundTaskState.Finished;
-            Notifier = new EachProgressNotifier(this);
+            Notifier = new ProgressNotifer(this);
+            Notifier.AddEach();
         }
 
         public override string Name => "작업 없음";

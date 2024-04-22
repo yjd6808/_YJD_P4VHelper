@@ -7,10 +7,11 @@ using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows.Automation;
+using System.Windows.Threading;
 using Accessibility;
 using P4VHelper.Base;
 using P4VHelper.Base.Extension;
-using P4VHelper.Base.Util;
+using P4VHelper.Base.Notifier;
 using P4VHelper.Model.TaskList;
 using P4VHelper.View;
 
@@ -29,19 +30,61 @@ namespace P4VHelper.Model
 
     public abstract class BackgroundTask : Bindable, IProgressListener
     {
+        /// <summary>
+        /// 자세히 보기가 눌려져있는지
+        /// </summary>
         protected bool _viewDetail;
-        protected BackgroundTaskState _state;                               // 무조건 백그라운드 스레드에서 write가 수행됨
 
-        public abstract string Name { get; }                                // 작업 이름
-        public abstract bool HasDetailView { get; }                         // 자세히 보기가 가능한 테스크인가?
-        public ProgressNotifer Notifier { get; protected set; }             // Progress 알림기
-        public bool IsRunning => _state == BackgroundTaskState.Running;     // 현재 실행중인가?
-        public bool IsTargeted => Mgr.TargetedTask == this;                 // 상태표시줄에 표시되는 녀석인가?
+        /// <summary>
+        /// 무조건 백그라운드 스레드에서만 write를 수행
+        /// </summary>
+        protected BackgroundTaskState _state;
+
+        /// <summary>
+        /// UI 쓰레드 디스패쳐
+        /// </summary>
+        protected Dispatcher _dispatcher;
+
+        /// <summary>
+        /// 작업 이름
+        /// </summary>
+        public abstract string Name { get; }
+
+        /// <summary>
+        /// 자세히 보기가 가능한 작업
+        /// </summary>
+        public abstract bool HasDetailView { get; }
+
+        /// <summary>
+        /// 진행도(0 ~ 100%) 알림기
+        /// </summary>
+        public ProgressNotifer Notifier { get; protected set; }
+
+        /// <summary>
+        /// 실행중인 상태인가
+        /// </summary>
+        public bool IsRunning => _state == BackgroundTaskState.Running;
+
+        /// <summary>
+        /// 중단이 요청된 상태인가
+        /// </summary>
         public bool IsInterruptRequested => _state == BackgroundTaskState.InterruptRequested;
 
-        public string ProgressText => $"{Notifier.Cur} / {Notifier.Max} ({Notifier.Percent.ToString("0.00")}%)";
-        public double Percent => Notifier.Percent;
-        
+        /// <summary>
+        /// 상태표시줄에 표시되는 녀석인가?
+        /// </summary>
+        public bool IsTargeted => Mgr.TargetedTask == this;
+
+        /// <summary>
+        /// UI 싱크 알림을 줘야하는 상태인가?
+        /// 상패표시줄에 타게팅 되었거나, 작업표시줄에 자세히보기를 누른 경우
+        /// </summary>
+        public bool IsNotificationRequired => IsTargeted || Mgr.ViewDetail;
+
+        /// <summary>
+        /// 2번째 프로그래스 유닛이 있는 경우
+        /// </summary>
+        public bool HasSecondProgressUnit => Notifier.Count > 1;
 
         public BackgroundTaskState State => _state;
         public bool ViewDetail
@@ -57,10 +100,11 @@ namespace P4VHelper.Model
         public BackgroundTaskMgr Mgr { get; }
         public BackgroundTask(BackgroundTaskMgr mgr)
         {
+            Mgr = mgr;
+
             _state = BackgroundTaskState.None;
             _viewDetail = false;
-
-            Mgr = mgr;
+            _dispatcher = mgr.Dispatcher;
         }
 
         public abstract void Execute();
@@ -68,12 +112,15 @@ namespace P4VHelper.Model
         public void _OnInterruptRequested()
         {
             _state = BackgroundTaskState.InterruptRequested;
-
             OnInterruptRequested();
-            Mgr.Dispatcher.BeginInvoke(() =>
+
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(IsRunning));
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                }
 
                 OnInterruptRequestedDispatched();
             });
@@ -82,12 +129,15 @@ namespace P4VHelper.Model
         public void _OnBegin()
         {
             _state = BackgroundTaskState.Running;
-
             OnBegin();
-            Mgr.Dispatcher.BeginInvoke(() =>
+
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(IsRunning));
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                }
 
                 OnBeginDispatched();
             });
@@ -103,10 +153,13 @@ namespace P4VHelper.Model
             _state = BackgroundTaskState.Interrupted;
 
             OnInterrupted();
-            Mgr.Dispatcher.BeginInvoke(() =>
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(IsRunning));
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                }
 
                 OnInterruptedDispatched();
             });
@@ -117,10 +170,13 @@ namespace P4VHelper.Model
             _state = BackgroundTaskState.Waiting;
 
             OnWaiting();
-            Mgr.Dispatcher.BeginInvoke(() =>
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(IsRunning));
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                }
 
                 OnWaitingDispatched();
             });
@@ -129,13 +185,22 @@ namespace P4VHelper.Model
         public void _OnTargeted()
         {
             OnTargeted();
-            Mgr.Dispatcher.BeginInvoke(() =>
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(IsRunning));
-                OnPropertyChanged(nameof(Name));
-                OnPropertyChanged(nameof(Percent));
-                OnPropertyChanged(nameof(ProgressText));
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                    OnPropertyChanged(nameof(Name));
+                    Notifier.First.NotifyProperty("Percent");
+                    Notifier.First.NotifyProperty("ProgressText");
+
+                    if (HasSecondProgressUnit)
+                    {
+                        Notifier.Second.NotifyProperty("Percent");
+                        Notifier.Second.NotifyProperty("ProgressText");
+                    }
+                }
 
                 OnTargetedDispatched();
             });
@@ -146,10 +211,13 @@ namespace P4VHelper.Model
             _state = BackgroundTaskState.Finished;
 
             OnEnd();
-            Mgr.Dispatcher.BeginInvoke(() =>
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(State));
-                OnPropertyChanged(nameof(IsRunning));
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                }
 
                 OnEndDispatched();
             });
@@ -163,7 +231,7 @@ namespace P4VHelper.Model
         public void _OnViewDetailChanged(bool changed)
         {
             OnViewDetailChanged(changed);
-            Mgr.Dispatcher.BeginInvoke(() =>
+            _dispatcher.BeginInvoke(() =>
             {
                 OnViewDetailChangedDispatched(changed);
             });
@@ -172,15 +240,24 @@ namespace P4VHelper.Model
         public void _OnReported(int cur)
         {
             OnReported(cur);
-            Mgr.Dispatcher.BeginInvoke(() =>
+            _dispatcher.BeginInvoke(() =>
             {
-                OnPropertyChanged(nameof(Percent));
-                OnPropertyChanged(nameof(ProgressText));
+                if (IsNotificationRequired)
+                {
+                    Notifier.First.NotifyProperty("Percent");
+                    Notifier.First.NotifyProperty("ProgressText");
 
+                    if (HasSecondProgressUnit)
+                    {
+                        Notifier.Second.NotifyProperty("Percent");
+                        Notifier.Second.NotifyProperty("ProgressText");
+                    }
+                }
                 OnReportedDispatched(cur);
             });
         }
 
+        // 핸들러로 빼야하나 고민중인데 일단 이렇게해보고..
         protected virtual void OnBegin() {}
         protected virtual void OnBeginDispatched() {}
         protected virtual void OnWaiting() { }

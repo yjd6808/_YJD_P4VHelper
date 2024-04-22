@@ -1,0 +1,102 @@
+﻿<UserControl x:Class="P4VHelper.Customize.Control.BackgroundTaskCtrl"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                 xmlns:local="clr-namespace:P4VHelper.Customize.Control"
+                 xmlns:mo="clr-namespace:P4VHelper.Model"
+                 xmlns:res="clr-namespace:P4VHelper.Resource"
+                 xmlns:vm="clr-namespace:P4VHelper.ViewModel"
+                 mc:Ignorable="d"
+                d:DataContext="{d:DesignInstance mo:BackgroundTask}">
+    <UserControl.Template>
+        <ControlTemplate>
+            <ContentPresenter x:Name="PART_ContentPresenter" />
+
+            <!--유닛이 2개면 프로그래스 바를 2개 보여줘야해서 트리거 사용해서 조건에 따라 컨텐트 프레젠터를 정함-->
+            <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding HasSecondProgressUnit}"
+                             Value="True">
+                    <Setter TargetName="PART_ContentPresenter" Property="Content">
+                        <Setter.Value>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid ToolTip="작업 이름을 나타냅니다.">
+                                    <TextBlock Text="{Binding Name}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Grid Grid.Column="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_PROGRESS_KEY}}" />
+                                    <Grid Grid.Column="1">
+                                        <ProgressBar Background="Aquamarine"
+                                                     Value="{Binding Notifier.First.Percent, Mode=OneWay}"
+                                                     Maximum="100.0" />
+                                        <TextBlock Text="{Binding Notifier.First.ProgressText, Mode=OneWay}" />
+                                    </Grid>
+                                </Grid>
+
+                                <Grid Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_PROGRESS_KEY}}" />
+                                    <Grid Grid.Column="1">
+                                        <ProgressBar Background="Aquamarine"
+                                                     Value="{Binding Notifier.Second.Percent, Mode=OneWay}"
+                                                     Maximum="100.0" />
+                                        <TextBlock Text="{Binding Notifier.Second.ProgressText, Mode=OneWay}" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding HasSecondProgressUnit}"
+                             Value="False">
+                    <Setter TargetName="PART_ContentPresenter"
+                            Property="Content">
+                        <Setter.Value>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid ToolTip="작업 이름을 나타냅니다.">
+                                    <TextBlock Text="{Binding Name}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Grid Grid.Column="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static res:R.ICON_PROGRESS_KEY}}" />
+                                    <Grid Grid.Column="1">
+                                        <ProgressBar Background="Aquamarine"
+                                                     Value="{Binding Notifier.First.Percent, Mode=OneWay}"
+                                                     Maximum="100.0" />
+                                        <TextBlock Text="{Binding Notifier.First.ProgressText, Mode=OneWay}" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </UserControl.Template>
+</UserControl>

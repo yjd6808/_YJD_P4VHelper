@@ -1,4 +1,4 @@
-﻿using P4VHelper.Base.Util;
+﻿using P4VHelper.Base.Notifier;
 
 namespace P4VHelper.Model.TaskList
 {
@@ -6,7 +6,8 @@ namespace P4VHelper.Model.TaskList
     {
         public Test(BackgroundTaskMgr mgr) : base(mgr)
         {
-            Notifier = new EachProgressNotifier(this, TimeSpan.FromMilliseconds(30));
+            Notifier = new ProgressNotifer(this);
+            Notifier.AddEach();
         }
 
         public override string Name => "숫자를 많이 센다";
@@ -19,7 +20,7 @@ namespace P4VHelper.Model.TaskList
 
             for (int i = 0; i < max; ++i)
             {
-                Notifier.Progress();
+                Notifier.Progress(0);
                 if (IsInterruptRequested)
                     break;
             }

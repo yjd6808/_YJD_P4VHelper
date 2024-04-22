@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace P4VHelper.Base.SearchEngine
+namespace P4VHelper.Engine.Search
 {
-    public enum SearchRule
+    public enum Rule
     {
         Regex,      // 정규식 검색
         Exact,      // 정확히 일치하는 문자열 검색
         Contain,    // 포함하는 물자열 검색
+        Max,
     }
 }

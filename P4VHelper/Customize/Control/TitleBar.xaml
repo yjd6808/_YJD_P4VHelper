@@ -20,7 +20,7 @@
                 <ResourceDictionary Source="../Style/ImageButton.xaml" />
                 <ResourceDictionary Source="../Control/ImageToggleButton.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <c:PackUrlImageSourceConverter x:Key="PackUrlImageSourceConverter" />
+            <c:IconConverter x:Key="IconConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
     <StackPanel>
@@ -50,8 +50,8 @@
 
             <local:ImageToggleButton Grid.Column="2"
                                      Click="PinOnClick"
-                                     NormalImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static r:R.ICON_PIN_KEY}}"
-                                     ToggledImageSource="{Binding Converter={StaticResource PackUrlImageSourceConverter}, ConverterParameter={x:Static r:R.ICON_UNPIN_KEY}}"
+                                     NormalImageSource="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static r:R.ICON_PIN_KEY}}"
+                                     ToggledImageSource="{Binding Converter={StaticResource IconConverter}, ConverterParameter={x:Static r:R.ICON_UNPIN_KEY}}"
                                      Toggled = "{Binding Topmost, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
             </local:ImageToggleButton>
 
@@ -60,7 +60,7 @@
                     Click="MinimizeOnClick"
                     p:ImageSourceProperty.Image="{
                 Binding 
-                Converter={StaticResource PackUrlImageSourceConverter},
+                Converter={StaticResource IconConverter},
                 ConverterParameter={x:Static r:R.ICON_MINIMIZE_KEY}}">
             </Button>
             <Button Grid.Column="4" 
@@ -68,7 +68,7 @@
                     Click="MaximizeOnClick"
                     p:ImageSourceProperty.Image="{
                 Binding 
-                Converter={StaticResource PackUrlImageSourceConverter},
+                Converter={StaticResource IconConverter},
                 ConverterParameter={x:Static r:R.ICON_MAXIMIZE_KEY}}">
             </Button>
             <Button Grid.Column="5" 
@@ -76,7 +76,7 @@
                     Click="CloseOnClick"
                     p:ImageSourceProperty.Image="{
                 Binding 
-                Converter={StaticResource PackUrlImageSourceConverter},
+                Converter={StaticResource IconConverter},
                 ConverterParameter={x:Static r:R.ICON_CLOSE_KEY}}">
             </Button>
         </Grid>

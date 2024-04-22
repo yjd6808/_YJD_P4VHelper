@@ -33,6 +33,7 @@
     <None Remove="Resource\Icons\common_not_usable.ico" />
     <None Remove="Resource\Icons\common_pin.ico" />
     <None Remove="Resource\Icons\common_position.ico" />
+    <None Remove="Resource\Icons\common_progress.ico" />
     <None Remove="Resource\Icons\common_rect.ico" />
     <None Remove="Resource\Icons\common_refresh.ico" />
     <None Remove="Resource\Icons\common_reset.ico" />
@@ -50,6 +51,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Model\Main\" />
     <Folder Include="Resource\Images\" />
   </ItemGroup>
 
@@ -59,6 +61,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\P4VHelper.Base\P4VHelper.Base.csproj" />
+    <ProjectReference Include="..\P4VHelper.Engine\P4VHelper.Engine.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -85,6 +88,7 @@
     <Resource Include="Resource\Icons\common_not_usable.ico" />
     <Resource Include="Resource\Icons\common_pin.ico" />
     <Resource Include="Resource\Icons\common_position.ico" />
+    <Resource Include="Resource\Icons\common_progress.ico" />
     <Resource Include="Resource\Icons\common_rect.ico" />
     <Resource Include="Resource\Icons\common_refresh.ico" />
     <Resource Include="Resource\Icons\common_reset.ico" />

@@ -43,6 +43,7 @@ namespace P4VHelper.Base
                 if (!isLockAcquiredBeforeTimeout)
                 {
                     result = CVResult.Timeout;
+                    break; // 타임아웃인 경우는 조건 무시해야겠지?
                 }
             }
             return result;

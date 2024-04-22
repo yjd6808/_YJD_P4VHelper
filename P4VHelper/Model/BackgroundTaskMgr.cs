@@ -102,9 +102,9 @@ namespace P4VHelper.Model
 
         public BackgroundTaskMgr(int threadCount, MainViewModel viewModel)
         {
-            DefaultTask = new Default(this);
             ViewModel = viewModel;
             Dispatcher = viewModel.View.Dispatcher;
+            DefaultTask = new Default(this);
             WaitingTaskList = new LinkedList<BackgroundTask>();
             RunningTaskList = new LinkedList<BackgroundTask>();
 
