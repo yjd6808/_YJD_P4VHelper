@@ -4,7 +4,7 @@ namespace P4VHelper.Model.TaskList
 {
     public class Test : BackgroundTask
     {
-        public Test(BackgroundTaskMgr mgr) : base(mgr)
+        public Test()
         {
             Notifier = new ProgressNotifer(this);
             Notifier.AddEach();
@@ -21,14 +21,7 @@ namespace P4VHelper.Model.TaskList
             for (int i = 0; i < max; ++i)
             {
                 Notifier.Progress(0);
-                if (IsInterruptRequested)
-                    break;
             }
-        }
-
-        protected override void OnEndDispatched()
-        {
-            Mgr.ViewModel.Logger?.WriteDebug($"{Name} 작업 완료");
         }
     }
 }

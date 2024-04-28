@@ -12,17 +12,17 @@ namespace P4VHelper.Base.Command
     {
         public string Description { get; }
 
-        public Command(string description)
+        public Command(string _description)
         {
-            Description = description;
+            Description = _description;
         }
 
-        public bool CanExecute(object? parameter)
+        public bool CanExecute(object? _parameter)
         {
             return true;
         }
 
-        public void Execute(object? parameter)
+        public void Execute(object? _parameter)
         {
             Execute();
         }
@@ -38,14 +38,14 @@ namespace P4VHelper.Base.Command
     public abstract class Command<T> : ICommand, INamedCommand where T : class
     {
         public string Description { get; }
-        public Command(string description)
+        public Command(string _description)
         {
-            Description = description;
+            Description = _description;
         }
 
-        public virtual bool CanExecute(object? parameter)
+        public virtual bool CanExecute(object? _parameter)
         {
-            if (parameter is not T)
+            if (_parameter is not T)
             {
                 return false;
             }
@@ -53,15 +53,15 @@ namespace P4VHelper.Base.Command
             return true;
         }
 
-        public void Execute(object? parameter)
+        public void Execute(object? _parameter)
         {
-            if (parameter is T param)
+            if (_parameter is T param)
             {
                 Execute(param);
             }
         }
 
-        public virtual void Execute(T param)
+        public virtual void Execute(T _param)
         {
             // TODO: 자식에서 구현
         }

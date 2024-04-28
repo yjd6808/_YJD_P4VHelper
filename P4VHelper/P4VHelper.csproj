@@ -6,7 +6,23 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CS8600;CS8602</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CS8600;CS8602</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Model\Main\**" />
+    <EmbeddedResource Remove="Model\Main\**" />
+    <None Remove="Model\Main\**" />
+    <Page Remove="Model\Main\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Resource\history.png" />
@@ -51,7 +67,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Model\Main\" />
     <Folder Include="Resource\Images\" />
   </ItemGroup>
 

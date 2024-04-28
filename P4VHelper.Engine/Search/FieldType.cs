@@ -20,33 +20,33 @@ namespace P4VHelper.Engine.Search
 
     public static class FieldTypeOf
     {
-        public static readonly Type[] Types;
-        public static readonly Dictionary<Type, FieldType> Fields;
+        public static readonly Type[] s_Types;
+        public static readonly Dictionary<Type, FieldType> s_Fields;
 
         static FieldTypeOf()
         {
             int size = (int)FieldType.Max;
-            Types = new Type[size];
-            Types[(int)FieldType.Int] = typeof(int);
-            Types[(int)FieldType.DateTime] = typeof(DateTime);
-            Types[(int)FieldType.String] = typeof(string);
+            s_Types = new Type[size];
+            s_Types[(int)FieldType.Int] = typeof(int);
+            s_Types[(int)FieldType.DateTime] = typeof(DateTime);
+            s_Types[(int)FieldType.String] = typeof(string);
 
-            Fields = new Dictionary<Type, FieldType>(32);
-            Fields.Add(typeof(int), FieldType.Int);
-            Fields.Add(typeof(DateTime), FieldType.DateTime);
-            Fields.Add(typeof(string), FieldType.String);
+            s_Fields = new Dictionary<Type, FieldType>(32);
+            s_Fields.Add(typeof(int), FieldType.Int);
+            s_Fields.Add(typeof(DateTime), FieldType.DateTime);
+            s_Fields.Add(typeof(string), FieldType.String);
         }
 
-        public static bool CanConvert<T>(FieldType type)
+        public static bool CanConvert<T>(FieldType _type)
         {
-            if (Types[(int)type] != typeof(T))
+            if (s_Types[(int)_type] != typeof(T))
                 throw new Exception("타입이 일치하지 않습니다.");
             return true;
         }
 
         public static FieldType GetType<T>()
         {
-            if (Fields.TryGetValue(typeof(T), out var type))
+            if (s_Fields.TryGetValue(typeof(T), out var type))
                 return type;
 
             throw new Exception("올바른 필드 타입이 아닙니다.");

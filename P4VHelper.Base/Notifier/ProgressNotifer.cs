@@ -14,19 +14,25 @@ namespace P4VHelper.Base.Notifier
 {
     public class ProgressNotifer : Bindable
     {
-        private IProgressListener _listener;            // 리포트를 받은 대상
-        private List<ProgressUnit> _units;              // 프로그래스 단위
+        private readonly IProgressListener listener_;            // 리포트를 받은 대상
+        private readonly List<ProgressUnit> units_;              // 프로그래스 단위
+        private int isInterruptRequested_;
 
-        public int Count => _units.Count;
+        public int Count => units_.Count;
+        public bool IsInterruptRequested
+        {
+            get => InterlockedEx.Bool.Get(ref isInterruptRequested_);
+            set => InterlockedEx.Bool.Set(ref isInterruptRequested_, value);
+        }
 
         public ProgressUnit First
         {
             get
             {
                 if (Count >= 1)
-                    return _units[0];
+                    return units_[0];
 
-                return ProgressUnit.Default;
+                return ProgressUnit.s_Default;
             }
         }
 
@@ -35,9 +41,9 @@ namespace P4VHelper.Base.Notifier
             get
             {
                 if (Count >= 2)
-                    return _units[1];
+                    return units_[1];
 
-                return ProgressUnit.Default;
+                return ProgressUnit.s_Default;
             }
         }
 
@@ -46,75 +52,85 @@ namespace P4VHelper.Base.Notifier
             get
             {
                 if (Count >= 3)
-                    return _units[2];
+                    return units_[2];
 
-                return ProgressUnit.Default;
+                return ProgressUnit.s_Default;
             }
         }
 
-        public ProgressUnit this[int slot]
+        public ProgressUnit this[int _slot]
         {
             get
             {
-                if (slot < 0 || slot >= _units.Count)
-                    return ProgressUnit.Default;
+                if (_slot < 0 || _slot >= units_.Count)
+                    return ProgressUnit.s_Default;
 
-                return _units[slot];
+                return units_[_slot];
             }
         }
 
-        public ProgressNotifer(IProgressListener listener)
+        public ProgressNotifer(IProgressListener _listener)
         {
-            _listener = listener;
-            _units = new List<ProgressUnit>();
+            listener_ = _listener;
+            units_ = new List<ProgressUnit>();
         }
 
-        public void AddEach(int reportElapsedMs = 200)
+        public void AddEach(int _reportElapsedMs = 200)
         {
             ProgressUnit unit = ProgressUnit.Factory.CreateEach(
                 this,
-                _units.Count,
-                TimeSpan.FromMilliseconds(reportElapsedMs)
+                units_.Count,
+                TimeSpan.FromMilliseconds(_reportElapsedMs)
             );
 
-            _units.Add(unit);
+            units_.Add(unit);
         }
 
-        public void AddPercentUnit(float percent = 2.0f, int reportElapsedMs = 200)
+        public void AddPercentUnit(float _percent = 2.0f, int _reportElapsedMs = 200)
         {
             ProgressUnit unit = ProgressUnit.Factory.CreatePercent(
                 this,
-                _units.Count,
-                percent,
-                TimeSpan.FromMicroseconds(reportElapsedMs)
+                units_.Count,
+                _percent,
+                TimeSpan.FromMicroseconds(_reportElapsedMs)
             );
 
-            _units.Add(unit);
+            units_.Add(unit);
         }
 
-        public void Start(params int[] maxs)
+        public void Start(params int[] _maxs)
         {
-            if (maxs.Length != _units.Count)
+            if (IsInterruptRequested)
+                throw new InterruptException();
+
+            if (_maxs.Length != units_.Count)
                 throw new ArgumentException("파라미터수와 유닛 수가 틀립니다.");
 
-            for (int i = 0; i < maxs.Length; ++i)
-                _units[i].Start(maxs[i]);
+            for (int i = 0; i < _maxs.Length; ++i)
+                units_[i].Start(_maxs[i]);
         }
 
-        public void Progress(int slot)
+        public void Progress(int _slot = 0, int _count = 1)
         {
-            _units[slot].Progress();
+            if (IsInterruptRequested)
+                throw new InterruptException();
+
+            units_[_slot].Progress(_count);
         }
 
-        public void Report(int slot)
+        public void Report(int _slot)
         {
-            ProgressUnit unit = _units[slot];
+            ProgressUnit unit = units_[_slot];
             Debug.Assert(unit.Cur <= unit.Max);
-            _listener._OnReported(slot);
+            listener_._OnReported(_slot);
             unit.Notified = unit.Cur;
 
             // if (_cur == _max)
             // _listener._OnFinished();
+        }
+
+        public class InterruptException : Exception
+        {
         }
     }
 }

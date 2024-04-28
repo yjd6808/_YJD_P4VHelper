@@ -8,10 +8,10 @@ namespace P4VHelper.Base.Extension
 {
     public static class QueueEx
     {
-        public static void AddRange<T>(this Queue<T> queue, IEnumerable<T> enu)
+        public static void AddRange<T>(this Queue<T> _queue, IEnumerable<T> _enu)
         {
-            foreach (T obj in enu)
-                queue.Enqueue(obj);
+            foreach (T obj in _enu)
+                _queue.Enqueue(obj);
         }
 
     }

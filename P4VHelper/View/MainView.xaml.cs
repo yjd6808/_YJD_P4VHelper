@@ -20,12 +20,13 @@ using P4VHelper.Customize.Converter;
 using P4VHelper.Engine.Model;
 using P4VHelper.Engine.Search;
 using P4VHelper.Model.TaskList;
+using System.Runtime.InteropServices;
+using P4VHelper.API;
+using P4VHelper.Base;
+using P4VHelper.Engine.Collection;
 
 namespace P4VHelper.View
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainView : Window
     {
         public MainViewModel ViewModel { get; }
@@ -37,20 +38,21 @@ namespace P4VHelper.View
             InitializeComponent();
         }
 
-        private async void OnLoaded(object sender, RoutedEventArgs e)
+        private async void OnLoaded(object _sender, RoutedEventArgs _e)
         {
-            ViewModel.Loaded();
+            await ViewModel.Loaded();
+            ViewModel.TaskMgr.Run(new Load("depot", int.MaxValue, true, LoadArgs.Changelist.Create(false), SaveArgs.Changelist.Create(false)));
 
-            ViewModel.TaskMgr.Run(new Test(ViewModel.TaskMgr));
-            await Task.Delay(500);
-            ViewModel.TaskMgr.Run(new Test(ViewModel.TaskMgr));
-            await Task.Delay(500);
-            ViewModel.TaskMgr.Run(new Test(ViewModel.TaskMgr));
-            await Task.Delay(500);
-            ViewModel.TaskMgr.Run(new Test(ViewModel.TaskMgr));
+            // ViewModel.TaskMgr.Run(new Test());
+            // await Task.Delay(500);
+            // ViewModel.TaskMgr.Run(new Test());
+            // await Task.Delay(500);
+            // ViewModel.TaskMgr.Run(new Test());
+            // await Task.Delay(500);
+            // ViewModel.TaskMgr.Run(new Test());
         }
 
-        private void OnClosing(object? sender, CancelEventArgs e)
+        private void OnClosing(object? _sender, CancelEventArgs _e)
         {
             if (ViewModel.TaskMgr.RunningThreadCount > 0)
             {
@@ -59,7 +61,7 @@ namespace P4VHelper.View
                     ViewModel.TaskMgr.Stop();
                     return;
                 }
-                e.Cancel = true;
+                _e.Cancel = true;
             }
 
             ViewModel.TaskMgr.Stop();

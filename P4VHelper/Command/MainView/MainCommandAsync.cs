@@ -11,9 +11,9 @@ namespace P4VHelper.Command.MainView
     internal class MainCommandAsync : CommandAsync
     {
         protected MainViewModel ViewModel { get; }
-        public MainCommandAsync(MainViewModel viewModel, string description, Action<Exception>? errorHandler) : base(description, errorHandler)
+        public MainCommandAsync(MainViewModel _viewModel, string _description, Action<Exception>? _errorHandler) : base(_description, _errorHandler)
         {
-            ViewModel = viewModel;
+            ViewModel = _viewModel;
         }
     }
 }

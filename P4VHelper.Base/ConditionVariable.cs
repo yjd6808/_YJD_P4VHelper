@@ -13,52 +13,52 @@ using System.Threading.Tasks;
 
 namespace P4VHelper.Base
 {
-    public enum CVResult
+    public enum CvResult
     {
         Timeout,    // 타이암웃
         None,       // 타임아웃 이전에 반환
     }
 
-    public class CV
+    public class Cv
     {
-        public CVResult Wait(object locker, Func<bool> predicate)
+        public CvResult Wait(object _locker, Func<bool> _predicate)
         {
-            Debug.Assert(Monitor.IsEntered(locker));
-            return Wait(locker, predicate, Timeout.InfiniteTimeSpan);
+            Debug.Assert(Monitor.IsEntered(_locker));
+            return Wait(_locker, _predicate, Timeout.InfiniteTimeSpan);
         }
 
-        public CVResult Wait(object locker, Func<bool> predicate, int timeout)
+        public CvResult Wait(object _locker, Func<bool> _predicate, int _timeout)
         {
-            Debug.Assert(Monitor.IsEntered(locker));
-            return Wait(locker, predicate, new TimeSpan(0, 0, 0, 0, timeout));
+            Debug.Assert(Monitor.IsEntered(_locker));
+            return Wait(_locker, _predicate, new TimeSpan(0, 0, 0, 0, _timeout));
         }
 
-        public CVResult Wait(object locker, Func<bool> predicate, TimeSpan timeout)
+        public CvResult Wait(object _locker, Func<bool> _predicate, TimeSpan _timeout)
         {
-            Debug.Assert(Monitor.IsEntered(locker)); 
-            CVResult result = CVResult.None;
-            while (!predicate())
+            Debug.Assert(Monitor.IsEntered(_locker)); 
+            CvResult result = CvResult.None;
+            while (!_predicate())
             {
-                bool isLockAcquiredBeforeTimeout = Monitor.Wait(locker, timeout);
+                bool isLockAcquiredBeforeTimeout = Monitor.Wait(_locker, _timeout);
                 if (!isLockAcquiredBeforeTimeout)
                 {
-                    result = CVResult.Timeout;
+                    result = CvResult.Timeout;
                     break; // 타임아웃인 경우는 조건 무시해야겠지?
                 }
             }
             return result;
         }
 
-        public void NotifyOne(object locker)
+        public void NotifyOne(object _locker)
         {
-            Debug.Assert(Monitor.IsEntered(locker));
-            Monitor.Pulse(locker);
+            Debug.Assert(Monitor.IsEntered(_locker));
+            Monitor.Pulse(_locker);
         }
 
-        public void NotifyAll(object locker)
+        public void NotifyAll(object _locker)
         {
-            Debug.Assert(Monitor.IsEntered(locker));
-            Monitor.PulseAll(locker);
+            Debug.Assert(Monitor.IsEntered(_locker));
+            Monitor.PulseAll(_locker);
         }
     }
 }

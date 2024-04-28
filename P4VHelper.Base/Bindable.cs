@@ -22,28 +22,28 @@ namespace P4VHelper.Base
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? _propertyName = null)
         {
             if (!IsNotifyEnabled)
                 return;
 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(_propertyName));
         }
 
-        public void NotifyProperty(string propertyName)
+        public void NotifyProperty(string _propertyName)
         {
-            OnPropertyChanged(propertyName);
+            OnPropertyChanged(_propertyName);
         }
 
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        protected bool SetField<T>(ref T _field, T _value, [CallerMemberName] string? _propertyName = null)
         {
-            if (EqualityComparer<T>.Default.Equals(field, value))
+            if (EqualityComparer<T>.Default.Equals(_field, _value))
                 return false;
 
-            field = value;
+            _field = _value;
 
             if (IsNotifyEnabled)
-                OnPropertyChanged(propertyName);
+                OnPropertyChanged(_propertyName);
 
             return true;
         }

@@ -13,17 +13,17 @@ namespace P4VHelper.Customize.Converter
 {
     public class StringConverter : IMultiValueConverter
     {
-        public static readonly StringConverter Instance = new();
+        public static readonly StringConverter s_Instance = new();
 
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object[] _values, Type _targetType, object _parameter, CultureInfo _culture)
         {
-            if (values.Length != 1)
+            if (_values.Length != 1)
                 throw new Exception("value가 1개가 아닙니다.");
 
-            return values[0].ToString();
+            return _values[0].ToString();
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        public object[] ConvertBack(object _value, Type[] _targetTypes, object _parameter, CultureInfo _culture)
         {
             throw new NotImplementedException();
         }

@@ -9,31 +9,31 @@ namespace P4VHelper.Base.Extension
 {
     public static class TaskEx
     {
-        public static Task StartSafe(this Task task, Action<Exception> errorHandler = null)
+        public static Task StartSafe(this Task _task, Action<Exception> _errorHandler = null)
         {
             try
             {
-                task.Start();
-                return task;
+                _task.Start();
+                return _task;
             }
             catch (Exception ex)
             {
-                errorHandler?.Invoke(ex);
-                return task;
+                _errorHandler?.Invoke(ex);
+                return _task;
             }
         }
 
-        public static Task<T> StartSafe<T>(this Task<T> task, Action<Exception> errorHandler = null)
+        public static Task<T> StartSafe<T>(this Task<T> _task, Action<Exception> _errorHandler = null)
         {
             try
             {
-                task.Start();
-                return task;
+                _task.Start();
+                return _task;
             }
             catch (Exception ex)
             {
-                errorHandler?.Invoke(ex);
-                return task;
+                _errorHandler?.Invoke(ex);
+                return _task;
             }
         }
     }

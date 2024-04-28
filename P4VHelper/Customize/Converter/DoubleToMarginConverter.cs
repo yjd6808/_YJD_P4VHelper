@@ -14,49 +14,49 @@ namespace P4VHelper.Customize.Converter
 {
     public class DoubleToMarginConverter : IMultiValueConverter
     {
-        public static readonly DoubleToMarginConverter Instance = new();
+        public static readonly DoubleToMarginConverter s_Instance = new();
 
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object[] _values, Type _targetType, object _parameter, CultureInfo _culture)
         {
-            if (values.Length != 1 && values.Length != 4 && values.Length != 5)
+            if (_values.Length != 1 && _values.Length != 4 && _values.Length != 5)
                 throw new Exception("파라미터가 1개 또는 4개 또는 5개 필요합니다.");
 
-            if (values.Length == 1)
+            if (_values.Length == 1)
             {
-                if (!values.All(x => x.IsNumericType()))
+                if (!_values.All(_x => _x.IsNumericType()))
                     throw new Exception("파라미터가 숫자 타입이어야 합니다.");
 
-                double f = System.Convert.ToDouble(values[0]);
+                double f = System.Convert.ToDouble(_values[0]);
                 return new Thickness(f, f, f, f);
             }
-            if (values.Length == 4)
+            if (_values.Length == 4)
             {
-                if (!values.All(x => x.IsNumericType()))
+                if (!_values.All(_x => _x.IsNumericType()))
                     throw new Exception("파라미터가 숫자 타입이어야 합니다.");
 
-                double f1 = System.Convert.ToDouble(values[0]);
-                double f2 = System.Convert.ToDouble(values[1]);
-                double f3 = System.Convert.ToDouble(values[2]);
-                double f4 = System.Convert.ToDouble(values[3]);
+                double f1 = System.Convert.ToDouble(_values[0]);
+                double f2 = System.Convert.ToDouble(_values[1]);
+                double f3 = System.Convert.ToDouble(_values[2]);
+                double f4 = System.Convert.ToDouble(_values[3]);
                 return new Thickness(f1, f2, f3, f4);
             }
-            if (values.Length == 5)
+            if (_values.Length == 5)
             {
-                if (!values[0].IsNumericType() ||
-                    !values[1].IsNumericType() ||
-                    !values[2].IsNumericType() ||
-                    !values[3].IsNumericType())
+                if (!_values[0].IsNumericType() ||
+                    !_values[1].IsNumericType() ||
+                    !_values[2].IsNumericType() ||
+                    !_values[3].IsNumericType())
                     throw new Exception("1, 2, 3, 4 파라미터가 숫자 타입이어야 합니다.");
 
-                if (values[4] is not Thickness)
+                if (_values[4] is not Thickness)
                     throw new Exception("5 파라미터가 Thickness 타입이어야 합니다.");
 
-                double f1 = System.Convert.ToDouble(values[0]);
-                double f2 = System.Convert.ToDouble(values[1]);
-                double f3 = System.Convert.ToDouble(values[2]);
-                double f4 = System.Convert.ToDouble(values[3]);
+                double f1 = System.Convert.ToDouble(_values[0]);
+                double f2 = System.Convert.ToDouble(_values[1]);
+                double f3 = System.Convert.ToDouble(_values[2]);
+                double f4 = System.Convert.ToDouble(_values[3]);
                 Thickness r = new Thickness(f1, f2, f3, f4);
-                Thickness o = (Thickness)values[4];
+                Thickness o = (Thickness)_values[4];
 
                 r.Bottom += o.Bottom;
                 r.Top += o.Top;
@@ -68,7 +68,7 @@ namespace P4VHelper.Customize.Converter
             return null;
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        public object[] ConvertBack(object _value, Type[] _targetTypes, object _parameter, CultureInfo _culture)
         {
             throw new NotImplementedException();
         }

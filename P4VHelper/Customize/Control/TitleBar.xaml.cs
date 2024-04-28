@@ -72,60 +72,60 @@ namespace P4VHelper.Customize.Control
         }
 
 
-        private Window _window;
+        private Window window_;
 
         public TitleBar()
         {
             InitializeComponent();
-            Loaded += (sender, args) =>
+            Loaded += (_sender, _args) =>
             {
-                _window = this.FindParent<Window>();
+                window_ = this.FindParent<Window>();
 
                 if (DesignerProperties.GetIsInDesignMode(this))
                     return;
 
-                if (_window == null)
+                if (window_ == null)
                     throw new Exception("무조건 윈도우 내부에 포함되어야합니다.");
 
-                _window.MouseDown += WindowOnMouseDown;
-                _window.PreviewKeyDown += OnPreviewKeyDown;
+                window_.MouseDown += WindowOnMouseDown;
+                window_.PreviewKeyDown += OnPreviewKeyDown;
             };
         }
 
-        private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+        private void OnPreviewKeyDown(object _sender, KeyEventArgs _e)
         {
-            if (EscTermination && e.Key == Key.Escape)
+            if (EscTermination && _e.Key == Key.Escape)
                 Close();
         }
 
-        private void WindowOnMouseDown(object sender, MouseButtonEventArgs e)
+        private void WindowOnMouseDown(object _sender, MouseButtonEventArgs _e)
         {
-            if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
+            if (_e.ChangedButton == MouseButton.Left && _e.ButtonState == MouseButtonState.Pressed)
             {
                 if (!Draggable)
                     return;
 
-                bool allowTransparency = _window.AllowsTransparency;
+                bool allowTransparency = window_.AllowsTransparency;
 
                 if (allowTransparency)
-                    _window.Opacity = 0.3;
+                    window_.Opacity = 0.3;
 
-                _window.DragMove();
+                window_.DragMove();
 
                 if (allowTransparency)
-                    _window.Opacity = 1.0;
+                    window_.Opacity = 1.0;
             }
         }
 
-        private void PinOnClick(object sender, RoutedEventArgs e)
+        private void PinOnClick(object _sender, RoutedEventArgs _e)
         {
-            if (_window.Topmost)
-                _window.Topmost = false;
+            if (window_.Topmost)
+                window_.Topmost = false;
             else
-                _window.Topmost = true;
+                window_.Topmost = true;
         }
 
-        private void CloseOnClick(object sender, RoutedEventArgs e)
+        private void CloseOnClick(object _sender, RoutedEventArgs _e)
         {
             Close();
         }
@@ -133,22 +133,22 @@ namespace P4VHelper.Customize.Control
         public void Close()
         {
             if (RealClose)
-                _window.Close();
+                window_.Close();
             else
-                _window.Visibility = Visibility.Collapsed;
+                window_.Visibility = Visibility.Collapsed;
         }
 
-        private void MaximizeOnClick(object sender, RoutedEventArgs e)
+        private void MaximizeOnClick(object _sender, RoutedEventArgs _e)
         {
-            if (_window.WindowState == WindowState.Maximized)
-                _window.WindowState = WindowState.Normal;
+            if (window_.WindowState == WindowState.Maximized)
+                window_.WindowState = WindowState.Normal;
             else
-                _window.WindowState = WindowState.Maximized;
+                window_.WindowState = WindowState.Maximized;
         }
 
-        private void MinimizeOnClick(object sender, RoutedEventArgs e)
+        private void MinimizeOnClick(object _sender, RoutedEventArgs _e)
         {
-            _window.WindowState = WindowState.Minimized;
+            window_.WindowState = WindowState.Minimized;
         }
 
        

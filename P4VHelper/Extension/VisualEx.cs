@@ -25,9 +25,9 @@ namespace P4VHelper.Extension
     public static class VisualEx
     {
         // 복붙
-        public static T FindParent<T>(this DependencyObject child) where T : DependencyObject
+        public static T FindParent<T>(this DependencyObject _child) where T : DependencyObject
         {
-            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            DependencyObject parentObject = VisualTreeHelper.GetParent(_child);
             if (parentObject == null) return null;
 
             T parent = parentObject as T;
@@ -37,25 +37,25 @@ namespace P4VHelper.Extension
                 return FindParent<T>(parentObject);
         }
 
-        public static void ForEachParent(this DependencyObject child, Action<DependencyObject> action)
+        public static void ForEachParent(this DependencyObject _child, Action<DependencyObject> _action)
         {
-            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            DependencyObject parentObject = VisualTreeHelper.GetParent(_child);
 
             if (parentObject == null)
                 return;
 
-            action(parentObject);
-            parentObject.ForEachParent(action);
+            _action(parentObject);
+            parentObject.ForEachParent(_action);
         }
 
-        public static T FindChild<T>(this DependencyObject depObj)
+        public static T FindChild<T>(this DependencyObject _depObj)
             where T : DependencyObject
         {
-            if (depObj == null) return null;
+            if (_depObj == null) return null;
 
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(_depObj); i++)
             {
-                var child = VisualTreeHelper.GetChild(depObj, i);
+                var child = VisualTreeHelper.GetChild(_depObj, i);
 
                 var result = (child as T) ?? FindChild<T>(child);
                 if (result != null) return result;
@@ -63,13 +63,13 @@ namespace P4VHelper.Extension
             return null;
         }
 
-        public static void PrintChildren(this DependencyObject depObj)
+        public static void PrintChildren(this DependencyObject _depObj)
         {
-            if (depObj == null) return;
+            if (_depObj == null) return;
 
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(_depObj); i++)
             {
-                var child = VisualTreeHelper.GetChild(depObj, i);
+                var child = VisualTreeHelper.GetChild(_depObj, i);
                 Debug.WriteLine(child);
                 PrintChildren(child);
             }
@@ -77,19 +77,19 @@ namespace P4VHelper.Extension
 
 
 
-        public static Point GetOffsetIn(this global::System.Windows.Media.Visual depObj, global::System.Windows.Media.Visual relative)
+        public static Point GetOffsetIn(this global::System.Windows.Media.Visual _depObj, global::System.Windows.Media.Visual _relative)
         {
             // Visual 객체의 위치를 기준이 되는 UIElement 객체를 기준으로 변환합니다.
-            GeneralTransform transform = depObj.TransformToVisual(relative);
+            GeneralTransform transform = _depObj.TransformToVisual(_relative);
 
             // 변환된 위치를 Point 객체로 변환합니다.
             return transform.Transform(new Point(0, 0));
         }
 
-        public static Point GetOffsetInMonitor(this global::System.Windows.Media.Visual depObj)
+        public static Point GetOffsetInMonitor(this global::System.Windows.Media.Visual _depObj)
         {
-            Vector offset = VisualTreeHelper.GetOffset(depObj);
-            return depObj.PointToScreen(new global::System.Windows.Point(offset.X, offset.Y));
+            Vector offset = VisualTreeHelper.GetOffset(_depObj);
+            return _depObj.PointToScreen(new global::System.Windows.Point(offset.X, offset.Y));
         }
 
 
@@ -100,7 +100,7 @@ namespace P4VHelper.Extension
 
         public class HitResult<TItem> where TItem : Control
         {
-            public HitResult(TItem item) => Item = item;
+            public HitResult(TItem _item) => Item = _item;
             public TItem Item { get; }
         }
 
@@ -108,18 +108,18 @@ namespace P4VHelper.Extension
             where TItem : Control
             where TDataContext : class
         {
-            public HitResultEx(TItem item, TDataContext dataContext) : base(item)
-                => DataContext = dataContext;
+            public HitResultEx(TItem _item, TDataContext _dataContext) : base(_item)
+                => DataContext = _dataContext;
 
             public TDataContext DataContext { get; }
         }
 
-        public static HitResultEx<TItem, TDataContext> HitTest<T, TItem, TDataContext>(this T visual, Point posOnVisual)
+        public static HitResultEx<TItem, TDataContext> HitTest<T, TItem, TDataContext>(this T _visual, Point _posOnVisual)
             where T : global::System.Windows.Media.Visual
             where TItem : Control
             where TDataContext : class
         {
-            HitTestResult hit = VisualTreeHelper.HitTest(visual, posOnVisual);
+            HitTestResult hit = VisualTreeHelper.HitTest(_visual, _posOnVisual);
 
             if (hit.VisualHit == null)
                 return null;
@@ -136,11 +136,11 @@ namespace P4VHelper.Extension
             return new HitResultEx<TItem, TDataContext>(hitItem, hitDataContext);
         }
 
-        public static HitResult<TItem> HitTest<T, TItem>(this T visual, Point posOnVisual)
+        public static HitResult<TItem> HitTest<T, TItem>(this T _visual, Point _posOnVisual)
             where T : global::System.Windows.Media.Visual
             where TItem : Control
         {
-            HitTestResult hit = VisualTreeHelper.HitTest(visual, posOnVisual);
+            HitTestResult hit = VisualTreeHelper.HitTest(_visual, _posOnVisual);
 
             if (hit.VisualHit == null)
                 return null;
@@ -156,22 +156,22 @@ namespace P4VHelper.Extension
 
 
         // 윈도우기준으로 visual의 위치,크기 정보를 얻는다.
-        public static Rect GetRectOnWindow(this FrameworkElement frameworkElement)
+        public static Rect GetRectOnWindow(this FrameworkElement _frameworkElement)
         {
-            Window window = Window.GetWindow(frameworkElement);
-            Point visualOffset = frameworkElement.TransformToAncestor(window).Transform(new global::System.Windows.Point(0, 0));
-            Size visualSize = new Size(frameworkElement.ActualWidth, frameworkElement.ActualHeight);
+            Window window = Window.GetWindow(_frameworkElement);
+            Point visualOffset = _frameworkElement.TransformToAncestor(window).Transform(new global::System.Windows.Point(0, 0));
+            Size visualSize = new Size(_frameworkElement.ActualWidth, _frameworkElement.ActualHeight);
             return new Rect(visualOffset, visualSize);
         }
 
-        public static bool ContainPoint(this FrameworkElement frameworkElement, Point p)
-            => frameworkElement.GetRectOnWindow().Contains(p);
+        public static bool ContainPoint(this FrameworkElement _frameworkElement, Point _p)
+            => _frameworkElement.GetRectOnWindow().Contains(_p);
 
         // https://stackoverflow.com/questions/2914495/wpf-how-to-programmatically-remove-focus-from-a-textbox
-        public static void FocusClear(this FrameworkElement element)
+        public static void FocusClear(this FrameworkElement _element)
         {
             // Kill logical focus
-            FocusManager.SetFocusedElement(FocusManager.GetFocusScope(element), null);
+            FocusManager.SetFocusedElement(FocusManager.GetFocusScope(_element), null);
             // Kill keyboard focus
             Keyboard.ClearFocus();
         }

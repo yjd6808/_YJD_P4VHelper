@@ -14,21 +14,21 @@ namespace P4VHelper.Customize.Converter
 {
     public class DoubleDivideConverter : IMultiValueConverter
     {
-        public static readonly DoubleDivideConverter Instance = new();
+        public static readonly DoubleDivideConverter s_Instance = new();
 
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object[] _values, Type _targetType, object _parameter, CultureInfo _culture)
         {
-            if (values.Length != 2)
+            if (_values.Length != 2)
                 throw new Exception("파라미터가 2개 필요합니다.");
 
-            if (!values.All(x => x.IsNumericType()))
+            if (!_values.All(_x => _x.IsNumericType()))
                 throw new Exception("파라미터가 숫자 타입이어야 합니다.");
 
-            double r = System.Convert.ToDouble(values[0]) / System.Convert.ToDouble(values[1]);
+            double r = System.Convert.ToDouble(_values[0]) / System.Convert.ToDouble(_values[1]);
             return r;
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        public object[] ConvertBack(object _value, Type[] _targetTypes, object _parameter, CultureInfo _culture)
         {
             throw new NotImplementedException();
         }

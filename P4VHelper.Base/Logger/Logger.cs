@@ -5,64 +5,64 @@ namespace P4VHelper.Base.Logger
 {
     public abstract class Logger
     {
-        private Logger? _next;
-        private int _id;
+        private Logger? next_;
+        private readonly int id_;
 
-        public Logger(int id)
+        public Logger(int _id)
         {
-            _id = id;
+            id_ = _id;
         }
 
-        public abstract void Write(LogLevel level, string msg);
+        public abstract void Write(LogLevel _level, string _msg);
 
-        public void Write(int id, LogLevel level, string msg)
+        public void Write(int _id, LogLevel _level, string _msg)
         {
             Logger? cur = this;
 
             while (cur != null)
             {
-                if (cur._id == id)
+                if (cur.id_ == _id)
                 {
-                    cur.Write(level, msg);
+                    cur.Write(_level, _msg);
                     break;
                 }
 
-                cur = cur._next;
+                cur = cur.next_;
             }
         }
 
-        public void WriteDebug(string msg) => Write(LogLevel.Debug, msg);
-        public void WriteInfo(string msg) => Write(LogLevel.Info, msg);
-        public void WriteError(string msg) => Write(LogLevel.Error, msg);
-        public void WriteNormal(string msg) => Write(LogLevel.Normal, msg);
-        public void WriteWarn(string msg) => Write(LogLevel.Warn, msg);
+        public void WriteDebug(string _msg) => Write(LogLevel.Debug, _msg);
+        public void WriteInfo(string _msg) => Write(LogLevel.Info, _msg);
+        public void WriteError(string _msg) => Write(LogLevel.Error, _msg);
+        public void WriteNormal(string _msg) => Write(LogLevel.Normal, _msg);
+        public void WriteWarn(string _msg) => Write(LogLevel.Warn, _msg);
 
-        public void WriteDebug(int id, string msg) => Write(id, LogLevel.Debug, msg);
-        public void WriteInfo(int id, string msg) => Write(id, LogLevel.Info, msg);
-        public void WriteError(int id, string msg) => Write(id, LogLevel.Error, msg);
-        public void WriteNormal(int id, string msg) => Write(id, LogLevel.Normal, msg);
-        public void WriteWarn(int id, string msg) => Write(id, LogLevel.Warn, msg);
+        public void WriteDebug(int _id, string _msg) => Write(_id, LogLevel.Debug, _msg);
+        public void WriteInfo(int _id, string _msg) => Write(_id, LogLevel.Info, _msg);
+        public void WriteError(int _id, string _msg) => Write(_id, LogLevel.Error, _msg);
+        public void WriteNormal(int _id, string _msg) => Write(_id, LogLevel.Normal, _msg);
+        public void WriteWarn(int _id, string _msg) => Write(_id, LogLevel.Warn, _msg);
 
 
-        protected void WriteChaining(LogLevel level, string msg)
+        protected void WriteChaining(LogLevel _level, string _msg)
         {
-            Logger? cur = _next;
+            Logger? cur = next_;
 
             while (cur != null)
             {
-                cur.Write(level, msg);
-                cur = cur._next;
+                cur.Write(_level, _msg);
+                cur = cur.next_;
             }
         }
 
-        public void Add(Logger logger)
+        public void Add(Logger _logger)
         {
-            if (logger._id == _id)
+            if (_logger.id_ == id_)
                 throw new Exception("루트와 ID가 같습니다.");
 
-            if (_next == null)
+            if (next_ == null)
             {
-                _next = logger;
+                next_ = _logger;
                 return;
             }
 
@@ -71,21 +71,21 @@ namespace P4VHelper.Base.Logger
 
             while (cur != null)
             {
-                if (cur._id == logger._id)
+                if (cur.id_ == _logger.id_)
                     throw new Exception("동일한 ID의 로거가 있습니다.");
 
                 prev = cur;
-                cur = cur._next;
+                cur = cur.next_;
             }
 
             if (prev != null)
-                prev._next = logger;
+                prev.next_ = _logger;
         }
 
-        public void Remove(int id)
+        public void Remove(int _id)
         {
             // 루트는 삭제 불가능
-            if (_id == id)
+            if (id_ == _id)
                 throw new Exception("루트 로거는 삭제할 수 없습니다.");
 
             Logger? cur = this;
@@ -93,16 +93,16 @@ namespace P4VHelper.Base.Logger
 
             while (cur != null)
             {
-                if (cur._id != id)
+                if (cur.id_ != _id)
                 {
                     prev = cur;
-                    cur = cur._next;
+                    cur = cur.next_;
                     continue;
                 }
 
                 // 루트가 곧 더미노드 역할을 하므로 절대로 prev가 null일 수 없다.
                 Debug.Assert(prev != null);
-                prev._next = cur._next;
+                prev.next_ = cur.next_;
                 break;
             }
         }

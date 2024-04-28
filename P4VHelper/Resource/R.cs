@@ -87,9 +87,9 @@ namespace P4VHelper.Resource
         public const string ICON_RUN_KEY = "common_run.ico";
         public const string ICON_PROGRESS_KEY = "common_progress.ico";
 
-        private static string GetIconKey(IconType type)
+        private static string GetIconKey(IconType _type)
         {
-            switch (type)
+            switch (_type)
             {
                 case IconType.History: return ICON_HISTORY_KEY;
                 case IconType.Pin: return ICON_PIN_KEY;

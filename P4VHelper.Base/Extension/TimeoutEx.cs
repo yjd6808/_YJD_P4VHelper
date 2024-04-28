@@ -9,7 +9,7 @@ namespace P4VHelper.Base.Extension
 {
     public class TimeoutEx
     {
-        public static readonly int Infinite = Timeout.Infinite;
-        public static readonly TimeSpan InfiniteSpan = Timeout.InfiniteTimeSpan;
+        public static readonly int s_Infinite = Timeout.Infinite;
+        public static readonly TimeSpan s_InfiniteSpan = Timeout.InfiniteTimeSpan;
     }
 }

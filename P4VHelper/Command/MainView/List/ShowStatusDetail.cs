@@ -11,13 +11,13 @@ namespace P4VHelper.Command.MainView.List
 {
     public class ShowStatusDetail : MainCommand<ImageToggleButton>
     {
-        public ShowStatusDetail(MainViewModel viewModel) : base(viewModel, "상태바 상세보기 클릭")
+        public ShowStatusDetail(MainViewModel _viewModel) : base(_viewModel, "상태바 상세보기 클릭")
         {
         }
 
-        public override void Execute(ImageToggleButton button)
+        public override void Execute(ImageToggleButton _button)
         {
-            ViewModel.TaskMgr.ViewDetail = button.Toggled;
+            ViewModel.TaskMgr.ViewDetail = _button.Toggled;
         }
     }
 }

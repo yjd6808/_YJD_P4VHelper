@@ -11,9 +11,9 @@ namespace P4VHelper.Engine.Search
     {
         public FieldType Type { get; }
 
-        void Set<T>(T value)
+        void Set<T>(T _value)
         {
-            ((FieldHolder<T>)this).Value = value;
+            ((FieldHolder<T>)this).Value = _value;
         }
 
         public FieldHolder<T> To<T>()
@@ -37,9 +37,9 @@ namespace P4VHelper.Engine.Search
     {
         public FieldType Type => FieldTypeOf.GetType<T>();
         public T Value { get; set; }
-        public FieldHolder(T value)
+        public FieldHolder(T _value)
         {
-            Value = value;
+            Value = _value;
         }
     }
 }

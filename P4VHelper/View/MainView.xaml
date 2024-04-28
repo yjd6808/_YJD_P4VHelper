@@ -346,7 +346,7 @@
                                         <Binding Source="{x:Static l:Constant.ZERO}" />
                                         <Binding ElementName="StatusExpandedGrid"
                                                  Path="Height" />
-                                        <Binding Source="{x:Static l:Constant.STATUS_BAR_HEIGHT_THICKNESS}" />
+                                        <Binding Source="{x:Static l:Constant.s_StatusBarHeightThickness}" />
                                     </MultiBinding>
                                 </Setter.Value>
                             </Setter>

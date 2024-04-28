@@ -11,45 +11,45 @@ namespace P4VHelper.Base.Extension
     {
         public static class Int
         {
-            public static int Get(ref int target)
+            public static int Get(ref int _target)
             {
-                return Interlocked.CompareExchange(ref target, 0, 0);
+                return Interlocked.CompareExchange(ref _target, 0, 0);
             }
 
-            public static int Set(ref int target, int value)
+            public static int Set(ref int _target, int _value)
             {
-                return Interlocked.Exchange(ref target, value);
+                return Interlocked.Exchange(ref _target, _value);
             }
 
-            public static int Inc(ref int target)
+            public static int Inc(ref int _target)
             {
-                return Interlocked.Increment(ref target);
+                return Interlocked.Increment(ref _target);
             }
 
-            public static int Dec(ref int target)
+            public static int Dec(ref int _target)
             {
-                return Interlocked.Decrement(ref target);
+                return Interlocked.Decrement(ref _target);
             }
 
-            public static int Add(ref int target, int value)
+            public static int Add(ref int _target, int _value)
             {
-                return Interlocked.Add(ref target, value);
+                return Interlocked.Add(ref _target, _value);
             }
         }
 
         public static class Bool
         {
-            public static bool Get(ref int target)
+            public static bool Get(ref int _target)
             {
-                return Convert.ToBoolean(Interlocked.CompareExchange(ref target, 1, 1));
+                return Convert.ToBoolean(Interlocked.CompareExchange(ref _target, 1, 1));
             }
 
-            public static int Set(ref int target, bool value)
+            public static int Set(ref int _target, bool _value)
             {
-                if (value)
-                    return Interlocked.CompareExchange(ref target, 1, 0);
+                if (_value)
+                    return Interlocked.CompareExchange(ref _target, 1, 0);
 
-                return Interlocked.CompareExchange(ref target, 0, 1);
+                return Interlocked.CompareExchange(ref _target, 0, 1);
             }
         }
     }

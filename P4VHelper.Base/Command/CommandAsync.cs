@@ -13,9 +13,9 @@ namespace P4VHelper.Base.Command
     public abstract class CommandAsync : Command
     {
         public Action<Exception>? ErrorHandler { get; }
-        public CommandAsync(string description, Action<Exception>? errorHandler) : base(description)
+        public CommandAsync(string _description, Action<Exception>? _errorHandler) : base(_description)
         {
-            ErrorHandler = errorHandler;
+            ErrorHandler = _errorHandler;
         }
 
         public virtual async Task ExecuteAsync()
@@ -35,21 +35,21 @@ namespace P4VHelper.Base.Command
     public abstract class CommandAsync<T> : Command<T> where T : class
     {
         public Action<Exception>? ErrorHandler { get; }
-        public CommandAsync(string description, Action<Exception>? errorHandler) : base(description)
+        public CommandAsync(string _description, Action<Exception>? _errorHandler) : base(_description)
         {
-            ErrorHandler = errorHandler;
+            ErrorHandler = _errorHandler;
         }
 
-        public virtual async Task ExecuteAsync(T param)
+        public virtual async Task ExecuteAsync(T _param)
         {
             throw new NotImplementedException("구현이 안되었어요");
         }
 
-        public override void Execute(T param)
+        public override void Execute(T _param)
         {
-            if (CanExecute(param))
+            if (CanExecute(_param))
             {
-                ExecuteAsync(param).StartSafe(ErrorHandler);
+                ExecuteAsync(_param).StartSafe(ErrorHandler);
             }
         }
     }

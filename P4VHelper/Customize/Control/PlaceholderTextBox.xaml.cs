@@ -35,11 +35,11 @@ namespace P4VHelper.Customize.Control
             DefaultStyleKeyProperty.OverrideMetadata(typeof(PlaceholderTextBox), new FrameworkPropertyMetadata(typeof(PlaceholderTextBox)));
         }
 
-        protected override void OnTextChanged(TextChangedEventArgs e)
+        protected override void OnTextChanged(TextChangedEventArgs _e)
         {
             IsEmpty = string.IsNullOrEmpty(Text);
             Debug.WriteLine(IsEmpty);
-            base.OnTextChanged(e);
+            base.OnTextChanged(_e);
         }
     }
 }

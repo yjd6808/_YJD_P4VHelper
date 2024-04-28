@@ -11,6 +11,6 @@ namespace P4VHelper.Engine.Search
 {
     public interface ISearcher<T>
     {
-        public void Search(List<T> list, SearchParam param);
+        public void Search(List<T> _list, SearchParam _param);
     }
 }

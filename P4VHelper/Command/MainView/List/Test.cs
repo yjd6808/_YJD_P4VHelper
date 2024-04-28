@@ -10,7 +10,7 @@ namespace P4VHelper.Command.MainView.List
 {
     public class Test : MainCommand
     {
-        public Test(MainViewModel viewModel) : base(viewModel, "테스트 커맨드")
+        public Test(MainViewModel _viewModel) : base(_viewModel, "테스트 커맨드")
         {
         }
         public override void Execute()

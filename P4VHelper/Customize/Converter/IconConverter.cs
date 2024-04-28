@@ -9,25 +9,25 @@ namespace P4VHelper.Customize.Converter
 {
     public class IconConverter : IValueConverter
     {
-        public static readonly IconConverter Instance = new();
-        private Dictionary<string, ImageSource> _cached = new ();
+        public static readonly IconConverter s_Instance = new();
+        private readonly Dictionary<string, ImageSource> cached_ = new ();
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object _value, Type _targetType, object _parameter, CultureInfo _culture)
         {
-            if (parameter is not string)
+            if (_parameter is not string)
                 throw new Exception("문자열을 인자로 전달해주세요.");
 
-            var iconFileName = (string)parameter;
+            var iconFileName = (string)_parameter;
             ImageSource result = null;
-            if (_cached.TryGetValue(iconFileName, out result))
+            if (cached_.TryGetValue(iconFileName, out result))
                 return result;
 
             result = new BitmapImage(new Uri(R.ICON_PATH + iconFileName));
-            _cached.Add(iconFileName, result);
+            cached_.Add(iconFileName, result);
             return result;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object _value, Type _targetType, object _parameter, CultureInfo _culture)
         {
             throw new NotImplementedException("구현이 안되었어요");
         }

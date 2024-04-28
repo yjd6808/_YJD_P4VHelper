@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace P4VHelper.Base.Extension
 {
-    public static class ICollectionEx
+    public static class CollectionEx
     {
-        public static void AddRange<T>(this ICollection<T> collection, ICollection<T> values)
+        public static void AddRange<T>(this ICollection<T> _collection, ICollection<T> _values)
         {
-            foreach (var value in values)
-                collection.Add(value);
+            foreach (var value in _values)
+                _collection.Add(value);
         }
     }
 }

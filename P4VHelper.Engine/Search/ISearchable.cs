@@ -10,6 +10,8 @@ namespace P4VHelper.Engine.Search
     public interface ISearchable
     {
         SearchableType SearchableType { get; }
-        bool Match(SearchParam param) => Matchers.IsMatch(this, param);
+        int Key { get; }
+
+        bool Match(SearchParam _param) => Matchers.IsMatch(this, _param);
     }
 }

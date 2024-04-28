@@ -21,10 +21,12 @@ namespace P4VHelper.Model
 {
     public class BackgroundTaskMgr : Bindable
     {
-        private List<BackgroundTaskThread> _threads;
-        private BackgroundTask _targetedTask;
-        private bool _viewDetail;
-        private CV _condVar;
+        public static BackgroundTaskMgr Instance { get; set; }
+
+        private readonly List<BackgroundTaskThread> threads_;
+        private BackgroundTask targetedTask_;
+        private bool viewDetail_;
+        private readonly Cv condVar_;
 
         public BackgroundTask DefaultTask { get; }
         public Dispatcher Dispatcher { get; }
@@ -33,7 +35,7 @@ namespace P4VHelper.Model
         /// <summary>
         /// 상태표시줄에 표시할 작업
         /// </summary>
-        public BackgroundTask TargetedTask => _targetedTask;
+        public BackgroundTask TargetedTask => targetedTask_;
 
         /// <summary>
         /// 대기중인 작업 목록
@@ -75,7 +77,7 @@ namespace P4VHelper.Model
         /// </summary>
         public int ThreadCount
         {
-            get => _threads.Count;
+            get => threads_.Count;
         }
 
         /// <summary>
@@ -83,7 +85,7 @@ namespace P4VHelper.Model
         /// </summary>
         public int RunningThreadCount
         {
-            get => _threads.Count(x => x.IsTaskRunning);
+            get => threads_.Count(_x => _x.IsTaskRunning);
         }
 
 
@@ -92,55 +94,73 @@ namespace P4VHelper.Model
         /// </summary>
         public bool ViewDetail
         {
-            get => _viewDetail;
+            get => viewDetail_;
             set
             {
-                _viewDetail = value;
+                viewDetail_ = value;
                 OnPropertyChanged();
             }
         }
 
-        public BackgroundTaskMgr(int threadCount, MainViewModel viewModel)
+        private BackgroundTaskMgr(int _threadCount, MainViewModel _viewModel)
         {
-            ViewModel = viewModel;
-            Dispatcher = viewModel.View.Dispatcher;
-            DefaultTask = new Default(this);
+            ViewModel = _viewModel;
+            Dispatcher = _viewModel.View.Dispatcher;
+            DefaultTask = new Default();
             WaitingTaskList = new LinkedList<BackgroundTask>();
             RunningTaskList = new LinkedList<BackgroundTask>();
 
-            _threads = new List<BackgroundTaskThread>();
-            _targetedTask = DefaultTask;
-            _viewDetail = false;
-            _condVar = new CV();
+            threads_ = new List<BackgroundTaskThread>();
+            targetedTask_ = DefaultTask;
+            viewDetail_ = false;
+            condVar_ = new Cv();
 
-            for (int i = 0; i < threadCount; ++i)
+            for (int i = 0; i < _threadCount; ++i)
             {
                 BackgroundTaskThread thread = new BackgroundTaskThread(i, this);
                 thread.Start();
-                _threads.Add(thread);
+                threads_.Add(thread);
             }
+        }
+
+        public static BackgroundTaskMgr GetInstance(int _threadCount, MainViewModel _viewModel)
+        {
+            if (Instance == null)
+            {
+                Instance = new BackgroundTaskMgr(_threadCount, _viewModel);
+            }
+            
+            return Instance;
         }
 
         /// <summary>
         /// 백그라운드 쓰레드를 모두 종료한다.
         /// 어떤 쓰레드에서도 호출 가능
         /// </summary>
-        public void Stop(bool interrupt = true)
+        public void Stop(bool _interrupt = true)
         {
             lock (this)
             {
-                if (interrupt)
+                if (_interrupt)
+                {
                     foreach (var task in RunningTaskList)
+                    {
                         task._OnInterruptRequested();
+                    }
+                }
 
-                foreach (var thread in _threads)
+                foreach (var thread in threads_)
+                {
                     thread.IsRunning = false;
+                }
 
-                _condVar.NotifyAll(this);
+                condVar_.NotifyAll(this);
             }
 
-            foreach (var t in _threads)
+            foreach (var t in threads_)
+            {
                 t.Join();
+            }
         }
 
         public void Abort()
@@ -160,11 +180,11 @@ namespace P4VHelper.Model
         /// <param name="callerThread">호출 쓰레드</param>
         /// <param name="task">대기중인 작업</param>
         /// <returns>true 반환시 작업이 있음</returns>
-        public BackgroundTask? Pop(BackgroundTaskThread callerThread)
+        public BackgroundTask? Pop(BackgroundTaskThread _callerThread)
         {
             lock (this)
             {
-                _condVar.Wait(this, () => callerThread.IsRunning == false || WaitingTaskList.Count > 0);
+                condVar_.Wait(this, () => _callerThread.IsRunning == false || WaitingTaskList.Count > 0);
 
                 if (WaitingTaskList.Count > 0)
                 {
@@ -181,21 +201,21 @@ namespace P4VHelper.Model
         /// 어떤 쓰레드에서도 호출 가능
         /// </summary>
         /// <param name="task">실행할 작업</param>
-        public void Run(BackgroundTask task)
+        public void Run(BackgroundTask _task)
         {
-            task._OnWaiting();
+            _task._OnWaiting();
             lock (this)
             {
-                WaitingTaskList.AddLast(task);
-                _condVar.NotifyOne(this);
+                WaitingTaskList.AddLast(_task);
+                condVar_.NotifyOne(this);
             }
         }
 
-        public void OnTaskBegin(BackgroundTask task)
+        public void OnTaskBegin(BackgroundTask _task)
         {
-            if (_targetedTask.State == BackgroundTaskState.Finished)
+            if (targetedTask_.State == BackgroundTaskState.Finished)
             {
-                UpdateTarget(task);
+                UpdateTarget(_task);
             }
 
             Dispatcher.BeginInvoke(() =>
@@ -204,48 +224,53 @@ namespace P4VHelper.Model
                 OnPropertyChanged(nameof(TotalTaskCount));
             });
 
-            RunningTaskList.AddLast(task);
-            task._OnBegin();
+            lock (this)
+            {
+                RunningTaskList.AddLast(_task);
+            }
+
+            _task._OnBegin();
         }
 
-        private void UpdateTarget(BackgroundTask task)
+        private void UpdateTarget(BackgroundTask _task)
         {
-            _targetedTask = task;
+            targetedTask_ = _task;
             Dispatcher.BeginInvoke(() => OnPropertyChanged(nameof(TargetedTask)));
-            _targetedTask._OnTargeted();
+            targetedTask_._OnTargeted();
         }
 
-        public void OnTaskEnd(BackgroundTask task)
+        public void OnTaskEnd(BackgroundTask _task)
         {
-            if (_targetedTask == task)
+            lock (this)
             {
-                BackgroundTask nextTask = GetRandomRunningTask() ?? DefaultTask;
-                UpdateTarget(nextTask);
+                if (targetedTask_ == _task)
+                {
+                    BackgroundTask nextTask = GetRandomRunningTask() ?? DefaultTask;
+                    UpdateTarget(nextTask);
+                }
+
+                Dispatcher.BeginInvoke(() =>
+                {
+                    OnPropertyChanged(nameof(RunningThreadCount));
+                    OnPropertyChanged(nameof(TotalTaskCount));
+                });
+
+                RunningTaskList.Remove(_task);
             }
-
-            Dispatcher.BeginInvoke(() =>
-            {
-                OnPropertyChanged(nameof(RunningThreadCount));
-                OnPropertyChanged(nameof(TotalTaskCount));
-            });
-
-            RunningTaskList.Remove(task);
-            task._OnEnd();
+            
+            _task._OnEnd();
         }
 
         public BackgroundTask? GetRandomRunningTask()
         {
-            lock (this)
-            {
-                BackgroundTask[] arr = RunningTaskList.Where((t) => t.State == BackgroundTaskState.Running).ToArray();
-                if (arr.Length == 0)
-                    return null;
-                int idx = Random.Shared.Next(0, arr.Length);
-                return arr[idx];
-            }
+            BackgroundTask[] arr = RunningTaskList.Where((_t) => _t.State == BackgroundTaskState.Running).ToArray();
+            if (arr.Length == 0)
+                return null;
+            int idx = Random.Shared.Next(0, arr.Length);
+            return arr[idx];
         }
 
-        public void SyncTaskToUI(ref ObservableCollection<BackgroundTask> tasks)
+        public void SyncTaskToUi(ref ObservableCollection<BackgroundTask> _tasks)
         {
         }
     }

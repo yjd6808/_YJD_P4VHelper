@@ -11,14 +11,14 @@ namespace P4VHelper.Customize.Property
 {
     public class ImageSourceProperty 
     {
-        public static ImageSource GetImage(DependencyObject obj)
+        public static ImageSource GetImage(DependencyObject _obj)
         {
-            return (ImageSource)obj.GetValue(Property);
+            return (ImageSource)_obj.GetValue(Property);
         }
 
-        public static void SetImage(DependencyObject obj, ImageSource value)
+        public static void SetImage(DependencyObject _obj, ImageSource _value)
         {
-            obj.SetValue(Property, value);
+            _obj.SetValue(Property, _value);
         }
 
         public static readonly DependencyProperty Property =

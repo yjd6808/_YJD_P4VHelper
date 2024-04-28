@@ -11,9 +11,9 @@ namespace P4VHelper.Logger
         {
         }
 
-        public override void Write(LogLevel level, string msg)
+        public override void Write(LogLevel _level, string _msg)
         {
-            Debug.WriteLine($"[{level}][{DateTime.Now:T}] {msg}");
+            Debug.WriteLine($"[{_level}][{DateTime.Now:T}] {_msg}");
         }
     }
 }

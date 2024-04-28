@@ -9,9 +9,9 @@ namespace P4VHelper.Model.TaskList
 {
     public class Default : BackgroundTask
     {
-        public Default(BackgroundTaskMgr mgr) : base(mgr)
+        public Default()
         {
-            _state = BackgroundTaskState.Finished;
+            state_ = BackgroundTaskState.Finished;
             Notifier = new ProgressNotifer(this);
             Notifier.AddEach();
         }

@@ -43,12 +43,12 @@ namespace P4VHelper.Customize.Control
             InitializeComponent();
         }
 
-        public void AddLog(string log)
+        public void AddLog(string _log)
         {
             if (Logs.Count > MaxItemCount)
                 Logs.RemoveAt(0);
 
-            Logs.Add(log);
+            Logs.Add(_log);
 
             if (Logs.Count > 0)
                 _lbLogList.ScrollIntoView(Logs.Last());

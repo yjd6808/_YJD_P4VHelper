@@ -11,41 +11,41 @@ namespace P4VHelper.Model
 {
     public class BackgroundTaskThread : Bindable
     {
-        private Thread _thread;
-        private int _isRunning;
-        private int _isTaskRunning;
+        private readonly Thread thread_;
+        private int isRunning_;
+        private int isTaskRunning_;
 
         public int Id { get; }
         public bool IsRunning
         {
-            get => InterlockedEx.Bool.Get(ref _isRunning);
-            set => InterlockedEx.Bool.Set(ref _isRunning, value);
+            get => InterlockedEx.Bool.Get(ref isRunning_);
+            set => InterlockedEx.Bool.Set(ref isRunning_, value);
         }
 
         public bool IsTaskRunning
         {
-            get => InterlockedEx.Bool.Get(ref _isTaskRunning);
-            private set => InterlockedEx.Bool.Set(ref _isTaskRunning, value);
+            get => InterlockedEx.Bool.Get(ref isTaskRunning_);
+            private set => InterlockedEx.Bool.Set(ref isTaskRunning_, value);
         }
         public BackgroundTaskMgr Mgr { get; }
 
-        public BackgroundTaskThread(int id, BackgroundTaskMgr mgr)
+        public BackgroundTaskThread(int _id, BackgroundTaskMgr _mgr)
         {
-            _thread = new Thread(ThreadRoutine);
+            thread_ = new Thread(ThreadRoutine);
 
-            Id = id;
-            Mgr = mgr;
+            Id = _id;
+            Mgr = _mgr;
         }
 
         public void Start()
         {
-            _isRunning = 1;
-            _thread.Start();
+            isRunning_ = 1;
+            thread_.Start();
         }
 
         public void Join()
         {
-            _thread.Join();
+            thread_.Join();
         }
 
         private void ThreadRoutine()

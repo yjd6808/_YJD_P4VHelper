@@ -12,18 +12,18 @@ namespace P4VHelper.Logger
     {
         public const int ID = 0;
 
-        private LogListBox _logListBox;
+        private readonly LogListBox logListBox_;
 
         
-        public MainLogger(LogListBox logListBox) : base(ID)
+        public MainLogger(LogListBox _logListBox) : base(ID)
         {
-            _logListBox = logListBox;
+            logListBox_ = _logListBox;
         }
 
-        public override void Write(LogLevel level, string msg)
+        public override void Write(LogLevel _level, string _msg)
         {
-            _logListBox.AddLog($"[{level}][{DateTime.Now:T}] {msg}");
-            WriteChaining(level, msg);
+            logListBox_.AddLog($"[{_level}][{DateTime.Now:T}] {_msg}");
+            WriteChaining(_level, _msg);
         }
     }
 }

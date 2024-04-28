@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Threading;
 using Accessibility;
@@ -14,6 +15,7 @@ using P4VHelper.Base.Extension;
 using P4VHelper.Base.Notifier;
 using P4VHelper.Model.TaskList;
 using P4VHelper.View;
+using P4VHelper.ViewModel;
 
 namespace P4VHelper.Model
 {
@@ -23,6 +25,7 @@ namespace P4VHelper.Model
         Waiting,
         Paused,
         Running,
+        Error,              // Exception이 발생한 경우(오류)
         InterruptRequested, // Running 상태인데 Interrupt를 요청받은 상황
         Interrupted,
         Finished
@@ -33,17 +36,12 @@ namespace P4VHelper.Model
         /// <summary>
         /// 자세히 보기가 눌려져있는지
         /// </summary>
-        protected bool _viewDetail;
+        protected bool viewDetail_;
 
         /// <summary>
         /// 무조건 백그라운드 스레드에서만 write를 수행
         /// </summary>
-        protected BackgroundTaskState _state;
-
-        /// <summary>
-        /// UI 쓰레드 디스패쳐
-        /// </summary>
-        protected Dispatcher _dispatcher;
+        protected BackgroundTaskState state_;
 
         /// <summary>
         /// 작업 이름
@@ -63,12 +61,17 @@ namespace P4VHelper.Model
         /// <summary>
         /// 실행중인 상태인가
         /// </summary>
-        public bool IsRunning => _state == BackgroundTaskState.Running;
+        public bool IsRunning => state_ == BackgroundTaskState.Running;
+
+        /// <summary>
+        /// 오류가 발생했는가?
+        /// </summary>
+        public bool IsError => state_ == BackgroundTaskState.Error;
 
         /// <summary>
         /// 중단이 요청된 상태인가
         /// </summary>
-        public bool IsInterruptRequested => _state == BackgroundTaskState.InterruptRequested;
+        public bool IsInterruptRequested => state_ == BackgroundTaskState.InterruptRequested;
 
         /// <summary>
         /// 상태표시줄에 표시되는 녀석인가?
@@ -86,35 +89,85 @@ namespace P4VHelper.Model
         /// </summary>
         public bool HasSecondProgressUnit => Notifier.Count > 1;
 
-        public BackgroundTaskState State => _state;
+        public BackgroundTaskState State => state_;
         public bool ViewDetail
         {
-            get => _viewDetail;
+            get => viewDetail_;
             set
             {
-                _viewDetail = value;
+                viewDetail_ = value;
                 _OnViewDetailChanged(value);
             }
         }
 
-        public BackgroundTaskMgr Mgr { get; }
-        public BackgroundTask(BackgroundTaskMgr mgr)
-        {
-            Mgr = mgr;
+        public BackgroundTaskMgr Mgr => BackgroundTaskMgr.Instance;
+        public Dispatcher Dispatcher => Mgr.Dispatcher;
 
-            _state = BackgroundTaskState.None;
-            _viewDetail = false;
-            _dispatcher = mgr.Dispatcher;
+        public BackgroundTask()
+        {
+            state_ = BackgroundTaskState.None;
+            viewDetail_ = false;
+        }
+
+        public Exception? __Execute()
+        {
+#if DEBUG
+            try
+            {
+                Execute();
+                return null;
+            }
+            catch (ProgressNotifer.InterruptException e)
+            {
+                state_ = BackgroundTaskState.InterruptRequested;
+                return null;
+            }
+#else
+            try
+            {
+                Execute();
+                return null;
+            }
+            catch (ProgressNotifer.InterruptException e)
+            {
+                state_ = BackgroundTaskState.InterruptRequested;
+                return null;
+            }
+            catch (Exception e)
+            {
+                state_ = BackgroundTaskState.Error;
+                return e;
+            }
+#endif
         }
 
         public abstract void Execute();
 
+        public void _OnError(Exception _e)
+        {
+            state_ = BackgroundTaskState.Error;
+            OnError(_e);
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (IsNotificationRequired)
+                {
+                    OnPropertyChanged(nameof(State));
+                    OnPropertyChanged(nameof(IsRunning));
+                }
+
+                OnErrorDispatched(_e);
+            });
+        }
+
         public void _OnInterruptRequested()
         {
-            _state = BackgroundTaskState.InterruptRequested;
+            state_ = BackgroundTaskState.InterruptRequested;
+            Notifier.IsInterruptRequested = true;
+
             OnInterruptRequested();
 
-            _dispatcher.BeginInvoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -128,10 +181,10 @@ namespace P4VHelper.Model
 
         public void _OnBegin()
         {
-            _state = BackgroundTaskState.Running;
+            state_ = BackgroundTaskState.Running;
             OnBegin();
 
-            _dispatcher.BeginInvoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -142,18 +195,20 @@ namespace P4VHelper.Model
                 OnBeginDispatched();
             });
 
-            Execute();
+            Exception? e = __Execute();
 
-            if (IsInterruptRequested)
+            if (IsError)
+                _OnError(e);
+            else if (IsInterruptRequested)
                 _OnInterrupted();
         }
 
         public void _OnInterrupted()
         {
-            _state = BackgroundTaskState.Interrupted;
+            state_ = BackgroundTaskState.Interrupted;
 
             OnInterrupted();
-            _dispatcher.BeginInvoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -167,10 +222,10 @@ namespace P4VHelper.Model
 
         public void _OnWaiting()
         {
-            _state = BackgroundTaskState.Waiting;
+            state_ = BackgroundTaskState.Waiting;
 
             OnWaiting();
-            _dispatcher.BeginInvoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -185,7 +240,7 @@ namespace P4VHelper.Model
         public void _OnTargeted()
         {
             OnTargeted();
-            _dispatcher.BeginInvoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -208,10 +263,13 @@ namespace P4VHelper.Model
 
         public void _OnEnd()
         {
-            _state = BackgroundTaskState.Finished;
+            if (IsRunning)
+            {
+                state_ = BackgroundTaskState.Finished;
+            }
 
             OnEnd();
-            _dispatcher.BeginInvoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -228,19 +286,19 @@ namespace P4VHelper.Model
             throw new NotImplementedException();
         }
 
-        public void _OnViewDetailChanged(bool changed)
+        public void _OnViewDetailChanged(bool _changed)
         {
-            OnViewDetailChanged(changed);
-            _dispatcher.BeginInvoke(() =>
+            OnViewDetailChanged(_changed);
+            Dispatcher.BeginInvoke(() =>
             {
-                OnViewDetailChangedDispatched(changed);
+                OnViewDetailChangedDispatched(_changed);
             });
         }
 
-        public void _OnReported(int cur)
+        public void _OnReported(int _cur)
         {
-            OnReported(cur);
-            _dispatcher.BeginInvoke(() =>
+            OnReported(_cur);
+            Dispatcher.BeginInvoke(() =>
             {
                 if (IsNotificationRequired)
                 {
@@ -253,7 +311,7 @@ namespace P4VHelper.Model
                         Notifier.Second.NotifyProperty("ProgressText");
                     }
                 }
-                OnReportedDispatched(cur);
+                OnReportedDispatched(_cur);
             });
         }
 
@@ -262,6 +320,12 @@ namespace P4VHelper.Model
         protected virtual void OnBeginDispatched() {}
         protected virtual void OnWaiting() { }
         protected virtual void OnWaitingDispatched() { }
+        protected virtual void OnError(Exception _e) { }
+
+        protected virtual void OnErrorDispatched(Exception _e)
+        {
+            Mgr.ViewModel.Logger?.WriteDebug($"{_e} 오류 발생");
+        }
         protected virtual void OnInterruptRequested() { }
         protected virtual void OnInterruptRequestedDispatched() { }
         protected virtual void OnInterrupted() { }
@@ -269,10 +333,17 @@ namespace P4VHelper.Model
         protected virtual void OnTargeted() { }
         protected virtual void OnTargetedDispatched() { }
         protected virtual void OnEnd() {}
-        protected virtual void OnEndDispatched() {}
-        protected virtual void OnViewDetailChanged(bool changed) {}
-        protected virtual void OnViewDetailChangedDispatched(bool changed) { }
-        protected virtual void OnReported(int cur) { }
-        protected virtual void OnReportedDispatched(int cur) { }
+
+        protected virtual void OnEndDispatched()
+        {
+            if (state_ == BackgroundTaskState.Finished)
+            {
+                Mgr.ViewModel.Logger?.WriteDebug($"{Name} 작업 완료");
+            }
+        }
+        protected virtual void OnViewDetailChanged(bool _changed) {}
+        protected virtual void OnViewDetailChangedDispatched(bool _changed) { }
+        protected virtual void OnReported(int _cur) { }
+        protected virtual void OnReportedDispatched(int _cur) { }
     }
 }

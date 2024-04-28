@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using P4VHelper.Base.Logger;
 using P4VHelper.Command.MainView;
+using P4VHelper.Engine;
 using P4VHelper.Logger;
 using P4VHelper.Model;
 using P4VHelper.View;
@@ -21,18 +22,23 @@ namespace P4VHelper.ViewModel
         public MainView View { get; set; }
         public MainCommander Commander { get; }
         public BackgroundTaskMgr TaskMgr { get; }
+        public P4VEngine Engine { get; }
+        public Configuration Config { get; }
 
-        public MainViewModel(MainView view)
+        public MainViewModel(MainView _view)
         {
-            View = view;
+            View = _view;
             Commander = new (this);
-            TaskMgr = new BackgroundTaskMgr(8, this);
+            TaskMgr = BackgroundTaskMgr.GetInstance(8, this);
+            Engine = P4VEngine.Instance;
+            Config = Configuration.Load();
         }
 
-        public void Loaded()
+        public async Task Loaded()
         {
             Logger = new MainLogger(View.LogListBox);
             Logger.Add(new DebugLogger());
+            await Engine.ConnectAsync(Config.P4VConfig);
         }
     }
 }

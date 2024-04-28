@@ -10,21 +10,21 @@ namespace P4VHelper.Base.Extension
 {
     public static class LockEx
     {
-        public static T Do<T>(object locker, Func<T> func)
+        public static T Do<T>(object _locker, Func<T> _func)
         {
-            Debug.Assert(locker != null);
-            lock (locker)
+            Debug.Assert(_locker != null);
+            lock (_locker)
             {
-                return func();
+                return _func();
             }
         }
 
-        public static void Do(object locker, Action action)
+        public static void Do(object _locker, Action _action)
         {
-            Debug.Assert(locker != null);
-            lock (locker)
+            Debug.Assert(_locker != null);
+            lock (_locker)
             {
-                action();
+                _action();
             }
         }
     }

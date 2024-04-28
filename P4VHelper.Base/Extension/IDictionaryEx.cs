@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace P4VHelper.Base.Extension
 {
-    public static class IDictionaryEx
+    public static class DictionaryEx
     {
-        public static TValue GetValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+        public static TValue GetValue<TKey, TValue>(this IDictionary<TKey, TValue> _dictionary, TKey _key)
         {
-            if (dictionary.TryGetValue(key, out TValue value))
+            if (_dictionary.TryGetValue(_key, out TValue value))
             {
                 return value;
             }

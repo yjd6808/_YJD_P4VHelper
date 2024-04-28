@@ -50,14 +50,14 @@ namespace P4VHelper.Customize.Control
                 new FrameworkPropertyMetadata(null,
                     FrameworkPropertyMetadataOptions.None));
 
-        public static readonly DependencyProperty CurrentImageSourceProperty
+        public static readonly DependencyProperty s_CurrentImageSourceProperty
             = CurrentImageSourcePropertyKey.DependencyProperty;
 
         public ImageSource CurrentImageSource
         {
             get
             {
-                return (ImageSource)GetValue(CurrentImageSourceProperty);
+                return (ImageSource)GetValue(s_CurrentImageSourceProperty);
             }
             protected set
             {
@@ -73,11 +73,11 @@ namespace P4VHelper.Customize.Control
                 CurrentImageSource = ToggledImageSource;
         }
 
-        protected override void OnInitialized(EventArgs e)
+        protected override void OnInitialized(EventArgs _e)
         {
             // CurrentImageSource를 처음에 업데이트 하기 위함
             UpdateCurrentImageSource();
-            base.OnInitialized(e);
+            base.OnInitialized(_e);
         }
 
         protected override void OnClick()

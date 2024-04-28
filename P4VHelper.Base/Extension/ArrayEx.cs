@@ -9,11 +9,11 @@ namespace P4VHelper.Base.Extension
 {
     public static class ArrayEx
     {
-        public static T[] Create<T>(int count, Func<T> genFunc) where T : class
+        public static T[] Create<T>(int _count, Func<T> _genFunc) where T : class
         {
-            T[] array = new T[count];
-            for (int i = 0; i < count; ++i)
-                array[i] = genFunc();
+            T[] array = new T[_count];
+            for (int i = 0; i < _count; ++i)
+                array[i] = _genFunc();
             return array;
         }
     }

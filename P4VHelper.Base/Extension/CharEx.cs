@@ -9,20 +9,20 @@ namespace P4VHelper.Base.Extension
 {
     public static class CharEx
     {
-        public static bool IsKorean(this char ch)
+        public static bool IsKorean(this char _ch)
         {
             // 조합 || 초성 모음
-            return (0xAC00 >= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E);
+            return (0xAC00 >= _ch && _ch <= 0xD7A3) || (0x3131 <= _ch && _ch <= 0x318E);
         }
 
-        public static bool IsEnglish(this char ch)
+        public static bool IsEnglish(this char _ch)
         {
-            return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
+            return ('a' <= _ch && _ch <= 'z') || ('A' <= _ch && _ch <= 'Z');
         }
 
-        public static bool IsNumeric(this char ch)
+        public static bool IsNumeric(this char _ch)
         {
-            return 0x30 <= ch && ch <= 0x39;
+            return 0x30 <= _ch && _ch <= 0x39;
         }
     }
 }

@@ -10,33 +10,39 @@ namespace P4VHelper.Engine.Search
 {
     public abstract class Reflection<T> where T : ISearchable
     {
-        public static ThreadLocal<IFieldHolder>[] Holders;
-        public static Action<T, IFieldHolder>[] Setters;
-        public static Func<T, IFieldHolder>[] Getters;
+        public static ThreadLocal<IFieldHolder>[] holders_;
+        public static Action<T, IFieldHolder>[] setters_;
+        public static Func<T, IFieldHolder>[] getters_;
 
-        public int MaxKey;
+        public int maxKey_;
 
-        public Reflection(int maxKey)
+        public Reflection(int _maxKey)
         {
-            MaxKey = maxKey;
+            maxKey_ = _maxKey;
         }
 
-        public IFieldHolder GetField(T searchable, int member) => Getters[member](searchable);
+        public IFieldHolder GetField(T _searchable, int _member)
+        {
+            if (_member < 0 || _member >= maxKey_ )
+                throw new ArgumentOutOfRangeException();
+
+            return getters_[_member](_searchable);
+        }
     }
 
     public class ReflectionMgr
     {
-        public static object[] Reflections;
+        public static object[] reflections_;
 
         static ReflectionMgr()
         {
-            Reflections = new object[(int)SearchableType.Max];
-            Reflections[0] = new Changelist._Reflection();
+            reflections_ = new object[(int)SearchableType.Max];
+            reflections_[0] = new P4VChangelist.Reflection();
         }
 
-        public static Reflection<T> Get<T>(T searchable) where T : ISearchable
+        public static Reflection<T> Get<T>(T _searchable) where T : ISearchable
         {
-            return (Reflection<T>)Reflections[(int)searchable.SearchableType];
+            return (Reflection<T>)reflections_[(int)_searchable.SearchableType];
         }
     }
 }
