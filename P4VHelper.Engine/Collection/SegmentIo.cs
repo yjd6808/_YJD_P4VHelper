@@ -21,19 +21,30 @@ namespace P4VHelper.Engine.Collection
     {
         public abstract string FileExtensionName { get; }
         public abstract SegmentType Type { get; }
-        public abstract string DirName { get; }
-        public SegmentGroup Group => P4VEngine.Instance.Mgr.GetGroup(Type);
+        public SegmentGroup Group { get; private set; }
 
         public abstract void Load(int _segId, LoadArgs? _args);
         public abstract void Save(int _segId, SaveArgs? _args);
 
+        public void SetGroup(SegmentGroup _group) => Group = _group;
+
+        public static SegmentIo Create(SegmentType _type, SegmentGroup _group)
+        {
+            SegmentIo io = null;
+            if (_type == SegmentType.Changelist)
+                io = new Changelist();
+            if (io == null) 
+                throw new Exception("알 수 없는 세그먼트 타입입니다.");
+
+            io.SetGroup(_group);
+            return io;
+        }
+
         public class Changelist : SegmentIo
         {
-            public override string DirName => "main";
             public override string FileExtensionName => ".bin";
             public override SegmentType Type => SegmentType.Changelist;
-            public string GetFilePath(Segment _seg) => $"index/changelist/{DirName}/{_seg.Id}{FileExtensionName}";
-            public string GetDirPath(Segment _seg) => $"index/changelist/{DirName}";
+            public string GetFilePath(Segment _seg) => $"{_seg.Parent.DirPath}/{_seg.Id}{FileExtensionName}";
 
             public override void Load(int _segId, LoadArgs? _args)
             {
@@ -66,7 +77,7 @@ namespace P4VHelper.Engine.Collection
             {
                 Segment seg = Group[_segId];
                 string path = GetFilePath(seg);
-                string dir = GetDirPath(seg);
+                string dir = seg.Parent.DirPath;
                 SaveArgs.Changelist? args = _args as SaveArgs.Changelist;
                 bool forceServer = args?.ForceServer ?? false;
 
@@ -94,11 +105,12 @@ namespace P4VHelper.Engine.Collection
                 }
 
                 int writePos = (int)stream.Position;
-                uint checksum = Checksum.ChecksumAvx2(bytes, 4, writePos - 4);
+                uint checksum = Checksum.ChecksumAvx2(bytes, 4, writePos - 4); // 시작 4바이트는 체크섬 공간이므로 제외
                 writer.Seek(0, SeekOrigin.Begin);
                 writer.Write(checksum);
                 FileEx.WriteAllBytes(path, bytes, 0, writePos);
                 ArrayPool<byte>.Shared.Return(bytes);
+                seg.Checksum = checksum;
 
                 // 메모리에 캐싱되지 않는 세그먼트는 반환토록 함
                 if (seg.State == SegmentState.Disk)
@@ -114,6 +126,9 @@ namespace P4VHelper.Engine.Collection
                 for (int i = 0; i < list.Count; ++i)
                 {
                     NativeChangelist native = list[i];
+                    if (Group.Config.IsMatch(native.Description))
+                        continue;
+
                     P4VChangelist changelistMain = new P4VChangelist(native);
                     _seg.Add(changelistMain);
                 }
@@ -130,7 +145,7 @@ namespace P4VHelper.Engine.Collection
                 int readBytes = FileEx.ReadAllBytes(path, bytes);
                 MemoryStream stream = new MemoryStream(bytes);
                 BinaryReader reader = new BinaryReader(stream);
-                _seg.Checkmsum = reader.ReadUInt32();
+                _seg.Checksum = reader.ReadUInt32();
                 int count = reader.ReadInt32();
 
                 for (int i = 0; i < count; ++i)

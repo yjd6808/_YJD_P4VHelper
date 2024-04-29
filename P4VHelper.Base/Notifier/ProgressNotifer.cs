@@ -75,7 +75,7 @@ namespace P4VHelper.Base.Notifier
             units_ = new List<ProgressUnit>();
         }
 
-        public void AddEach(int _reportElapsedMs = 200)
+        public void AddEach(int _reportElapsedMs = 50)
         {
             ProgressUnit unit = ProgressUnit.Factory.CreateEach(
                 this,
@@ -86,7 +86,7 @@ namespace P4VHelper.Base.Notifier
             units_.Add(unit);
         }
 
-        public void AddPercentUnit(float _percent = 2.0f, int _reportElapsedMs = 200)
+        public void AddPercentUnit(float _percent = 2.0f, int _reportElapsedMs = 50)
         {
             ProgressUnit unit = ProgressUnit.Factory.CreatePercent(
                 this,

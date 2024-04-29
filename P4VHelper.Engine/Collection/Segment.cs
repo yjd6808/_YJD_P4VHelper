@@ -30,12 +30,13 @@ namespace P4VHelper.Engine.Collection
     public enum SegmentType
     {
         Changelist,
+        Max,
     }
 
     public enum SegmentState
     {
-        Disk,
-        Memory,
+        Disk,       // 파일에 저장되거나 파일로도 저장되지 않은 상태
+        Memory,     // 메모리에 저장되어 있는 상태
     }
 
     public class Segment
@@ -53,7 +54,7 @@ namespace P4VHelper.Engine.Collection
         public SegmentType Type => Parent.Type;
         public int StartId => id_ * Capacity + 1;
         public int EndId => (id_ + 1) * Capacity;
-        public uint Checkmsum { get; set; }
+        public uint Checksum { get; set; }
 
         public Segment(int _id, SegmentGroup _group)
         {
@@ -64,67 +65,91 @@ namespace P4VHelper.Engine.Collection
 
         public void Ready(int _capacity)
         {
-            if (list_ == null)
+            lock (this)
             {
-                list_ = new List<ISegmentElement>(_capacity);
-            }
+                if (list_ == null)
+                {
+                    list_ = new List<ISegmentElement>(_capacity);
+                }
 
-            if (list_.Capacity != _capacity)
-            {
-                list_ = new List<ISegmentElement>(_capacity);
+                if (list_.Capacity != _capacity)
+                {
+                    list_ = new List<ISegmentElement>(_capacity);
+                }
             }
         }
 
         public void Clear()
         {
-            if (list_ != null)
+            lock (this)
             {
-                list_.Clear();
-                state_ = SegmentState.Disk;
+                if (list_ != null)
+                {
+                    list_.Clear();
+                    state_ = SegmentState.Disk;
+                }
             }
         }
 
         public void Add(ISegmentElement _item, bool _sort = false)
         {
-            ThrowIfNotReady();
-
-            list_.Add(_item);
-
-            if (_sort)
+            lock (this)
             {
-                Sort();
+                ThrowIfNotReady();
+
+                list_.Add(_item);
+
+                if (_sort)
+                {
+                    Sort();
+                }
             }
         }
-
+        
         public void Load(LoadArgs? _args)
         {
-            ThrowIfNotReady();
-            Parent.Io.Load(id_, _args);
-            state_ = SegmentState.Memory;
+            lock (this)
+            {
+                ThrowIfNotReady();
+                Parent.Io.Load(id_, _args);
+                state_ = SegmentState.Memory;
+            }
         }
 
         public void Save(SaveArgs? _args)
         {
-            ThrowIfNotReady();
-            ThrowIfNotLoaded();
-            Parent.Io.Save(id_, _args);
+            lock (this)
+            {
+                ThrowIfNotReady();
+                ThrowIfNotLoaded();
+                Parent.Io.Save(id_, _args);
+            }
         }
 
         public int CalculateSize()
         {
-            ThrowIfNotLoaded();
-
-            int size = sizeof(uint) + sizeof(int); // checksum + count
-            for (int i = 0; i < Count; ++i)
+            lock (this)
             {
-                size += list_[i].CalculateSize();
+                ThrowIfNotLoaded();
+
+                int size = sizeof(uint) + sizeof(int); // checksum + count
+                for (int i = 0; i < Count; ++i)
+                {
+                    size += list_[i].CalculateSize();
+                }
+
+                return size;
             }
-            return size;
         }
 
         public void Sort()
         {
-            list_.Sort((_x, _y) => _y.Key.CompareTo(_x.Key));
+            lock (this)
+            {
+                ThrowIfNotReady();
+
+                list_.Sort((_x, _y) => _y.Key.CompareTo(_x.Key));
+            }
         }
 
         public ISegmentElement? Find(int _key)

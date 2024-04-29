@@ -110,6 +110,12 @@
                         <!-- 히스토리/검색박스-->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
+                                <!--히스토리/검색박스/검색대상(Alias) 너비-->
+                                <ColumnDefinition Width="80" />
+
+                                <!--히스토리/검색박스/매칭방식(Contain/Exact/StartWith/EndWith/Regex) 너비-->
+                                <ColumnDefinition Width="80" />
+
                                 <!--히스토리/검색박스/텍스트박스 너비-->
                                 <ColumnDefinition Width="*" />
 
@@ -117,17 +123,22 @@
                                 <ColumnDefinition Width="60" />
                             </Grid.ColumnDefinitions>
 
+                            <ComboBox Name="ChangelistAliasComboBox">
+                                <!--ItemsSource="{Binding ViewModel.Config.P4VConfig.SegGroupEnumerable}"-->
+                            </ComboBox>
+                            <ComboBox Grid.Column="1" Name="ChangelistRuleComboBox" />
+
                             <uc:PlaceholderTextBox Style="{StaticResource PlaceholderTextBox}"
                                                    Background="Transparent"
-                                                   Grid.Column="0"
+                                                   Grid.Column="2"
                                                    x:Name="HistorySearchTextBox"
                                                    VerticalContentAlignment="Center"
                                                    Text="안녕"
                                                    Placeholder="안녕하세요">
 
                             </uc:PlaceholderTextBox>
-                            <Button Grid.Column="1"
-                                    Name="HistorySearchButton"
+                            <Button Grid.Column="3"
+                                    Name="ChangelistSearchButton"
                                     Content="검색" />
                         </Grid>
 

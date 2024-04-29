@@ -30,15 +30,15 @@ namespace P4VHelper.ViewModel
             View = _view;
             Commander = new (this);
             TaskMgr = BackgroundTaskMgr.GetInstance(8, this);
-            Engine = P4VEngine.Instance;
             Config = Configuration.Load();
+            Engine = new P4VEngine(Config.P4VConfig);
         }
 
         public async Task Loaded()
         {
             Logger = new MainLogger(View.LogListBox);
             Logger.Add(new DebugLogger());
-            await Engine.ConnectAsync(Config.P4VConfig);
+            await Engine.ConnectAsync();
         }
     }
 }

@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using P4VHelper.Engine.Model;
 
 namespace P4VHelper.Engine.Collection
 {
     public class SegmentGroup : List<Segment>
     {
         public SegmentType Type => Io.Type;
+        public P4VConfig.SegmentGroup Config { get; }
+        public string DirPath => $"segments/{Type.ToString().ToLower()}/{Config.Alias}";
+        public int Id { get; }
         public SegmentIo Io { get; }
 
-        public SegmentGroup(int _capacity, SegmentIo _io) : base(_capacity)
+        public SegmentGroup(P4VConfig.SegmentGroup _config) : base(_config.CachedSegmentCount * 10)
         {
-            Io = _io;
+            Config = _config;
+            Id = _config.Id;
+            Io = SegmentIo.Create(_config.Type, this);
         }
 
         public void Ready(int _count)

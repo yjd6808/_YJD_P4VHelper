@@ -15,25 +15,21 @@ namespace P4VHelper.Engine
 {
     public class P4VEngine
     {
-        public static P4VEngine Instance = new();
-
         public P4VConfig Config { get; }
         public SegmentMgr Mgr { get; }
 
-        private P4VEngine()
+        public P4VEngine(P4VConfig _config)
         {
-            Config = new ();
+            Config = _config;
             Mgr = new SegmentMgr(this);
         }
 
-        public Task ConnectAsync(P4VConfig _config)
+        public Task ConnectAsync()
         {
-            Config.CopyFrom(_config);
-
             return API.P4.ConnectAsync(
-                _config.Uri,
-                _config.UserName,
-                _config.Workspace);
+                Config.Uri,
+                Config.UserName,
+                Config.Workspace);
         }
 
         

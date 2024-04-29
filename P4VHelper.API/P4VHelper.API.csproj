@@ -6,6 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CS8600;CS8602;CS8618</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CS8600;CS8602;CS8618</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="p4api.net" Version="2023.2.255.3501" />
   </ItemGroup>

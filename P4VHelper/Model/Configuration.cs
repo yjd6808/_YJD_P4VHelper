@@ -5,7 +5,9 @@ using System.Windows;
 using System.Xml;
 using System.Xml.Linq;
 using P4VHelper.Base;
+using P4VHelper.Engine.Collection;
 using P4VHelper.Engine.Model;
+using static P4VHelper.Base.Extension.InterlockedEx;
 
 namespace P4VHelper.Model
 {
@@ -58,18 +60,63 @@ namespace P4VHelper.Model
             p4.UserName = perforceElement.Attribute("user_name").Value;
             p4.Workspace = perforceElement.Attribute("workspace").Value;
             p4.ReadDelay = int.Parse(perforceElement.Attribute("read_delay").Value);
-            p4.RefreshSize = int.Parse(perforceElement.Attribute("refresh_size").Value);
+            p4.RefreshSegmentCount = int.Parse(perforceElement.Attribute("refresh_segment_count").Value);
             p4.SegmentSize = int.Parse(perforceElement.Attribute("segment_size").Value);
 
-            foreach (XElement searcherElement in perforceElement.Elements("Searcher"))
+            foreach (XElement segElement in perforceElement.Elements("SegmentGroup"))
             {
-                P4VConfig.Searcher searcher = new ();
+                P4VConfig.SegmentGroup segmentGroup = new ();
 
-                searcher.Path = searcherElement.Attribute("path").Value;
-                searcher.Alias = searcherElement.Attribute("alias").Value;
-                searcher.CachedSegmentCount = int.Parse(searcherElement.Attribute("cached_segment_count").Value);
+                string groupType = segElement.Attribute("type").Value;
 
-                p4.Searchers.Add(searcher);
+                if (groupType == "changelist")
+                    segmentGroup.Type = SegmentType.Changelist;
+                else
+                    throw new Exception("올바르지 않은 세그먼트 그룹 타입입니다.");
+
+
+                segmentGroup.Path = segElement.Attribute("path").Value;
+                segmentGroup.Alias = segElement.Attribute("alias").Value;
+                segmentGroup.Id = P4VConfig.SegmentGroup.s_Count++;
+                segmentGroup.CachedSegmentCount = int.Parse(segElement.Attribute("cached_segment_count").Value);
+
+                IEnumerable<XElement> filters = segElement.Elements("Filter");
+                foreach (XElement filterElement in filters)
+                {
+                    var filter = new P4VConfig.SegmentGroup.Filter();
+
+                    string filterMode = filterElement.Attribute("mode").Value;
+                    string filterType = filterElement.Attribute("type").Value;
+
+                    if (filterMode == "start_with")
+                        filter.Mode = P4VConfig.SegmentGroup.FilterMode.StartWith;
+                    else if (filterMode == "contain")
+                        filter.Mode = P4VConfig.SegmentGroup.FilterMode.Contain;
+                    else if (filterMode == "end_with")
+                        filter.Mode = P4VConfig.SegmentGroup.FilterMode.EndWith;
+                    else
+                        throw new Exception("올바르지 않은 필터 모드입니다.");
+
+
+                    if (filterType == "string")
+                        filter.Type = P4VConfig.SegmentGroup.FilterType.String;
+                    else if (filterType == "type")
+                        filter.Type = P4VConfig.SegmentGroup.FilterType.Type;
+                    else
+                        throw new Exception("올바르지 않은 필터 타입입니다.");
+
+                    filter.Value = filterElement.Attribute("value").Value;
+
+                    if (string.IsNullOrEmpty(filter.Value))
+                        throw new Exception("필터 value 애튜리뷰트가 비어있습니다.");
+
+                    segmentGroup.Filters.Add(filter);
+                }
+
+                segmentGroup.ConstructRegex();
+
+
+                p4.SegGroupMap[segmentGroup.Id] = segmentGroup;
             }
 
             p4.Validate();

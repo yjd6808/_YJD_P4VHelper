@@ -21,6 +21,7 @@ using P4VHelper.Engine.Model;
 using P4VHelper.Engine.Search;
 using P4VHelper.Model.TaskList;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using P4VHelper.API;
 using P4VHelper.Base;
 using P4VHelper.Engine.Collection;
@@ -41,15 +42,10 @@ namespace P4VHelper.View
         private async void OnLoaded(object _sender, RoutedEventArgs _e)
         {
             await ViewModel.Loaded();
-            ViewModel.TaskMgr.Run(new Load("depot", int.MaxValue, true, LoadArgs.Changelist.Create(false), SaveArgs.Changelist.Create(false)));
 
-            // ViewModel.TaskMgr.Run(new Test());
-            // await Task.Delay(500);
-            // ViewModel.TaskMgr.Run(new Test());
-            // await Task.Delay(500);
-            // ViewModel.TaskMgr.Run(new Test());
-            // await Task.Delay(500);
-            // ViewModel.TaskMgr.Run(new Test());
+            //ChangelistAliasComboBox.ItemsSource = ViewModel.Config.P4VConfig.SegGroupMap[SegmentType.Changelist].Alias
+
+            ViewModel.TaskMgr.Run(new Load("depot", int.MaxValue, true, LoadArgs.Changelist.Create(_forceServer: true), SaveArgs.Changelist.Create(_forceServer: true)));
         }
 
         private void OnClosing(object? _sender, CancelEventArgs _e)
