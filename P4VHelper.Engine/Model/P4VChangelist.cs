@@ -18,16 +18,24 @@ namespace P4VHelper.Engine.Model
 {
     // 인스턴스 메모리 크기: 160 byte (언젠가 최적화 필요... FieldHolder 안쓰면 50byte 나옴)
     public class P4VChangelist : 
-        Bindable, 
-        ISearchable, 
+        Bindable,
         ISegmentElement,
         IComparable<P4VChangelist>
     {
-        public const int REVISION_KEY       = 0;
-        public const int DATE_KEY           = 1;
-        public const int USERNAME_KEY       = 2;
-        public const int DESCRIPTION_KEY    = 3;
-        public const int MAX_KEY            = 4;        // END
+        public enum Member
+        {
+            //[Description("리비전")]
+            Revision,
+            //[Description("날짜")]
+            Date,
+            //[Description("이름")]
+            UserName,
+            //[Description("설명")]
+            Description,
+
+            [Browsable(false)]
+            Max
+        }
 
         public static readonly IComparer<P4VChangelist> s_DefaultComparer = new DescendingComparer<P4VChangelist>();
 
@@ -95,8 +103,8 @@ namespace P4VHelper.Engine.Model
             }
         }
 
-        public SearchableType SearchableType => SearchableType.Changelist;
         public int Key => revision_.Value;
+        public SegmentType Type => SegmentType.Changelist;
 
         public void WriteTo(BinaryWriter _writer)
         {
@@ -142,26 +150,26 @@ namespace P4VHelper.Engine.Model
         {
             static Reflection()
             {
-                holders_ = new ThreadLocal<IFieldHolder>[MAX_KEY];
-                // Holders[REVISION_KEY] = new ThreadLocal<FieldHolder<int>>();
-                // Holders[DATE_KEY] = new ThreadLocal<FieldHolder<DateTime>>();
-                // Holders[USERNAME_KEY] = new ThreadLocal<FieldHolder<string>>();
-                // Holders[DESCRIPTION_KEY] = new ThreadLocal<FieldHolder<string>>();
+                setters_ = new Action<P4VChangelist, IFieldHolder>[(int)Member.Max];
+                setters_[(int)Member.Revision]      = ((_changelist, _holder) => _holder.Set(_changelist.Revision));
+                setters_[(int)Member.Date]          = ((_changelist, _holder) => _holder.Set(_changelist.Date));
+                setters_[(int)Member.UserName]      = ((_changelist, _holder) => _holder.Set(_changelist.UserName));
+                setters_[(int)Member.Description]   = ((_changelist, _holder) => _holder.Set(_changelist.Description));
 
-                setters_ = new Action<P4VChangelist, IFieldHolder>[MAX_KEY];
-                setters_[REVISION_KEY] = ((_changelist, _holder) => _holder.Set(_changelist.Revision));
-                setters_[DATE_KEY] = ((_changelist, _holder) => _holder.Set(_changelist.Date));
-                setters_[USERNAME_KEY] = ((_changelist, _holder) => _holder.Set(_changelist.UserName));
-                setters_[DESCRIPTION_KEY] = ((_changelist, _holder) => _holder.Set(_changelist.Description));
+                getters_ = new Func<P4VChangelist, IFieldHolder>[(int)Member.Max];
+                getters_[(int)Member.Revision]      = ((_changelist) => _changelist.RevisionHolder);
+                getters_[(int)Member.Date]          = ((_changelist) => _changelist.DateHolder);
+                getters_[(int)Member.UserName]      = ((_changelist) => _changelist.UserNameHolder);
+                getters_[(int)Member.Description]   = ((_changelist) => _changelist.DescriptionHolder);
 
-                getters_ = new Func<P4VChangelist, IFieldHolder>[MAX_KEY];
-                getters_[REVISION_KEY] = ((_changelist) => _changelist.RevisionHolder);
-                getters_[DATE_KEY] = ((_changelist) => _changelist.DateHolder);
-                getters_[USERNAME_KEY] = ((_changelist) => _changelist.UserNameHolder);
-                getters_[DESCRIPTION_KEY] = ((_changelist) => _changelist.DescriptionHolder);
+                segTypes_ = new SegmentType[(int)Member.Max];
+                segTypes_[(int)Member.Revision]      = SegmentType.Changelist;
+                segTypes_[(int)Member.Date]          = SegmentType.Changelist;
+                segTypes_[(int)Member.UserName]      = SegmentType.Changelist;
+                segTypes_[(int)Member.Description]   = SegmentType.ChangelistByUser;
             }
 
-            public Reflection() : base(MAX_KEY)
+            public Reflection() : base((int)Member.Max)
             {
 
             }

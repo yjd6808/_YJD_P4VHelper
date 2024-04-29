@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using P4VHelper.Engine.Collection;
 
 namespace P4VHelper.Engine.Search
 {
@@ -54,12 +55,12 @@ namespace P4VHelper.Engine.Search
             return s_MatcherList[index];
         }
 
-        public static bool IsMatch<T>(T _searchable, SearchParam _param) where T : ISearchable
+        public static bool IsMatch<T>(T _searchable, SearchParam _param) where T : ISegmentElement
         {
-            IMatcher matcher = Get(_param.input_.Type, _param.rule_);
+            IMatcher matcher = Get(_param.Input.Type, _param.Rule);
             Reflection<T> reflection = ReflectionMgr.Get(_searchable);
-            IFieldHolder src = reflection.GetField(_searchable, _param.member_);
-            return matcher.Match(src, _param.input_);
+            IFieldHolder src = reflection.GetField(_searchable, _param.Member);
+            return matcher.Match(src, _param.Input);
         }
     }
 

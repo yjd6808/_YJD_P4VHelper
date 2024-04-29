@@ -5,9 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:l="clr-namespace:P4VHelper"
+        xmlns:em="clr-namespace:P4VHelper.Engine.Model;assembly=P4VHelper.Engine"
+        xmlns:es="clr-namespace:P4VHelper.Engine.Search;assembly=P4VHelper.Engine"
         xmlns:res="clr-namespace:P4VHelper.Resource"
         xmlns:uc="clr-namespace:P4VHelper.Customize.Control"
         xmlns:p="clr-namespace:P4VHelper.Customize.Property"
+        xmlns:pv="clr-namespace:P4VHelper.Customize.Provider"
         xmlns:r="clr-namespace:P4VHelper.Resource"
         mc:Ignorable="d"
         Title="MainWindow"
@@ -28,6 +31,30 @@
         <WindowChrome CaptionHeight="0"
                       ResizeBorderThickness="5" />
     </WindowChrome.WindowChrome>
+    <Window.Resources>
+        
+        <!--
+        Enum을 일부 필드는 제외하고 ItemsSource에 바인딩하는 방법
+        @출처: https://stackoverflow.com/questions/4306743/wpf-data-binding-how-to-data-bind-an-enum-to-combo-box-using-xaml
+        
+        TypeName에 innerclass 타입을 적는 방법: +문자로 연결하면됨
+        @참고: https://stackoverflow.com/questions/4269896/creating-an-instance-of-a-nested-class-in-xaml
+        -->
+        <ObjectDataProvider MethodName="GetValues"
+                            ObjectType="{x:Type pv:EnumerationProvider}"
+                            x:Key="ChangelistMemberEnum">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="em:P4VChangelist+Member" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        <ObjectDataProvider MethodName="GetValues"
+                            ObjectType="{x:Type pv:EnumerationProvider}"
+                            x:Key="RuleEnum">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="es:Rule" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
     <Grid Name="MainGrid">
 
         <Grid.Height>
@@ -110,10 +137,13 @@
                         <!-- 히스토리/검색박스-->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
-                                <!--히스토리/검색박스/검색대상(Alias) 너비-->
+                                <!--히스토리/검색박스/검색대상리포지터리(Alias) 너비-->
                                 <ColumnDefinition Width="80" />
 
                                 <!--히스토리/검색박스/매칭방식(Contain/Exact/StartWith/EndWith/Regex) 너비-->
+                                <ColumnDefinition Width="80" />
+
+                                <!--히스토리/검색박스/검색대상멤버-->
                                 <ColumnDefinition Width="80" />
 
                                 <!--히스토리/검색박스/텍스트박스 너비-->
@@ -123,21 +153,45 @@
                                 <ColumnDefinition Width="60" />
                             </Grid.ColumnDefinitions>
 
-                            <ComboBox Name="ChangelistAliasComboBox">
-                                <!--ItemsSource="{Binding ViewModel.Config.P4VConfig.SegGroupEnumerable}"-->
+                            <ComboBox Name="HistoryAliasComboBox"
+                                      ItemsSource="{Binding ViewModel.Config.P4VConfig.ChangelistSegmentGroup}"
+                                      VerticalContentAlignment="Center"
+                                      SelectionChanged="HistoryAliasComboBox_OnSelectionChanged"
+                                      SelectedIndex="0">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Alias}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <ComboBox Grid.Column="1" Name="ChangelistRuleComboBox" />
+
+                            <ComboBox Grid.Column="1"
+                                      Name="HistoryMemberComboBox"
+                                      VerticalContentAlignment="Center"
+                                      ItemsSource="{Binding Source={StaticResource ChangelistMemberEnum}}"
+                                      SelectionChanged="HistoryMemberComboBox_OnSelectionChanged"
+                                      SelectedIndex="0">
+                            </ComboBox>
+
+                            <ComboBox Grid.Column="2"
+                                      Name="HistoryRuleComboBox"
+                                      VerticalContentAlignment="Center"
+                                      ItemsSource="{Binding Source={StaticResource RuleEnum}}"
+                                      SelectedIndex="0">
+                            </ComboBox>
 
                             <uc:PlaceholderTextBox Style="{StaticResource PlaceholderTextBox}"
                                                    Background="Transparent"
-                                                   Grid.Column="2"
+                                                   Grid.Column="3"
                                                    x:Name="HistorySearchTextBox"
                                                    VerticalContentAlignment="Center"
+                                                   TextChanged="HistorySearchTextBox_OnTextChanged"
+                                                   PreviewTextInput="HistorySearchTextBox_OnPreviewTextInput"
                                                    Text="안녕"
                                                    Placeholder="안녕하세요">
 
                             </uc:PlaceholderTextBox>
-                            <Button Grid.Column="3"
+                            <Button Grid.Column="4"
                                     Name="ChangelistSearchButton"
                                     Content="검색" />
                         </Grid>
@@ -147,7 +201,7 @@
                             <Grid.Resources>
                                 <!-- 히스토리/테이블/뷰소스-->
                                 <CollectionViewSource x:Key="ChangelistViewSource"
-                                                      Source="{Binding ViewModel.HistoryChangelists}">
+                                                      Source="{Binding ViewModel.HistorySearchResult}">
                                     <CollectionViewSource.SortDescriptions>
                                         <scm:SortDescription PropertyName="Revision"
                                                              Direction="Descending" />
@@ -156,14 +210,18 @@
                             </Grid.Resources>
 
                             <DataGrid ItemsSource="{Binding Source={StaticResource ChangelistViewSource}}"
+                                      IsReadOnly="True"
                                       AutoGenerateColumns="False"
                                       GridLinesVisibility="None">
 
                                 <!-- 히스토리/테이블/컬럼-->
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Revision"
-                                                        Width="30"
+                                                        Width="50"
                                                         Binding="{Binding Revision}" />
+                                    <DataGridTextColumn Header="Date"
+                                                        Width="auto"
+                                                        Binding="{Binding Path=Date, Converter={StaticResource DateToStringConverter}, ConverterParameter=yyyy/MM/dd}" />
                                     <DataGridTextColumn Header="UserName"
                                                         Width="80"
                                                         Binding="{Binding UserName}" />

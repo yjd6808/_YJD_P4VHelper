@@ -32,15 +32,41 @@ namespace P4VHelper.Engine.Model
                 public string Value { get; set; } = string.Empty;
             }
 
-            public static int s_Count = 0;
+            private string path_ = string.Empty;
+            private string alias_ = string.Empty;
 
             public SegmentType Type { get; set; } = SegmentType.Max;
-            public string Path { get; set; } = string.Empty;
-            public string Alias { get; set; } = string.Empty;
+            public SegmentGroup? Ref { get; set; }
+
+            public string Path
+            {
+                get => IsRef ? Ref.Path : path_;
+                set
+                {
+                    if (IsRef) 
+                        throw new Exception("레프 세그먼트 컨피그는 패쓰설정이 불가능함");
+
+                    path_ = value;
+                }
+            }
+
+            public string Alias
+            {
+                get => IsRef ? Ref.Path : path_;
+                set
+                {
+                    if (IsRef)
+                        throw new Exception("레프 세그먼트 컨피그는 얼라이어스설정이 불가능함");
+                    alias_ = value;
+                }
+            }
+
             public int Id { get; set; }
             public int CachedSegmentCount { get; set; } = 10;
             public List<Filter> Filters { get; set; } = new();
             public Regex? Regex { get; set; }
+
+            public bool IsRef => Ref != null;
 
             public void ConstructRegex()
             {
@@ -107,26 +133,61 @@ namespace P4VHelper.Engine.Model
         public int SegmentSize { get; set; } = 5000;
         public int RefreshSegmentCount { get; set; } = 1;
 
+        /// <summary>
+        /// 그룹 Id를 인덱스로하는 세그먼트 목록
+        /// </summary>
+        private SegmentGroup[] segMap_ = new SegmentGroup[30];
 
-        public SegmentGroup[] SegGroupMap { get; private set; } = new SegmentGroup[30];
+        /// <summary>
+        /// 그룹 세그먼트 갯수
+        /// </summary>
+        public int Count { get; private set; }
 
-        public SegmentGroup GetSegmentGorupById(int _id)
+        /// <summary>
+        /// 세그먼트 타입별로 모아놓은 목록
+        /// </summary>
+        private readonly Dictionary<SegmentType, HashSet<SegmentGroup>> segTypeMap_ = new();
+        
+        /// <summary>
+        /// History UI에서 원격 리포지터리 Alias 콤보박스를 초기화하는 용도
+        /// </summary>
+        public IEnumerable<SegmentGroup> ChangelistSegmentGroup => segTypeMap_[SegmentType.Changelist];
+
+        
+
+        public void AddSegmentGroup(SegmentGroup _group)
         {
-            if (_id >= SegmentGroup.s_Count)
+            _group.Id = Count;
+            if (segMap_[Count] != null)
+                throw new Exception("이미 할당된 세그먼트가 존재합니다.");
+
+            segTypeMap_.TryAdd(_group.Type, new HashSet<SegmentGroup>());
+
+            if (segTypeMap_[_group.Type].FirstOrDefault((x) => x.Alias == _group.Alias) != null)
+                throw new Exception($"{_group.Type}타입의 세그먼트 그룹에는 {_group.Alias}가 이미 존재합니다.");
+
+            segTypeMap_[_group.Type].Add(_group);
+            segMap_[Count] = _group;
+            Count++;
+        }
+
+        public SegmentGroup GetSegmentGroupById(int _id)
+        {
+            if (_id >= Count)
                 throw new Exception($"{_id}은 올바른 세그먼트 그룹 인덱스가 아닙니다.");
 
-            if (SegGroupMap[_id] == null)
+            if (segMap_[_id] == null)
                 throw new Exception($"{_id}에 해당하는 그룹이 없습니다.");
 
-            return SegGroupMap[_id];
+            return segMap_[_id];
         }
 
         public SegmentGroup GetSegmentGroup(SegmentType _type, string _alias)
         {
-            for (int i = 0; i < SegmentGroup.s_Count; ++i)
+            for (int i = 0; i < Count; ++i)
             {
-                if (SegGroupMap[i].Type == _type && SegGroupMap[i].Alias == _alias)
-                    return SegGroupMap[i];
+                if (segMap_[i].Type == _type && segMap_[i].Alias == _alias)
+                    return segMap_[i];
             }
 
             throw new Exception($"{_type}/{_alias} 해당하는 세그먼트 그룹을 찾을 수 없습니다");
@@ -134,16 +195,6 @@ namespace P4VHelper.Engine.Model
 
         public void Validate()
         {
-            Dictionary<SegmentType, HashSet<string>> dict = new ();
-            dict.Add(SegmentType.Changelist, new HashSet<string>());
-
-            for (int i = 0; i < SegmentGroup.s_Count; ++i)
-            {
-                var group = SegGroupMap[i];
-                if (dict[group.Type].Add(group.Alias) == false)
-                    throw new Exception($"{group.Type}타입의 세그먼트 그룹에는 {group.Alias}가 이미 존재합니다.");
-            }
-
         }
 
         public void CopyFrom(P4VConfig _config)
@@ -155,10 +206,10 @@ namespace P4VHelper.Engine.Model
             RefreshSegmentCount = _config.RefreshSegmentCount;
             SegmentSize = _config.SegmentSize;
 
-            SegGroupMap = new SegmentGroup[30];
+            segMap_ = new SegmentGroup[30];
 
-            for (int i = 0; i < SegmentGroup.s_Count; ++i)
-                SegGroupMap[i] = _config.SegGroupMap[i];
+            for (int i = 0; i < Count; ++i)
+                segMap_[i] = _config.segMap_[i];
         }
     }
 

@@ -20,11 +20,12 @@ namespace P4VHelper.Engine.Collection
     public abstract class SegmentIo
     {
         public abstract string FileExtensionName { get; }
-        public abstract SegmentType Type { get; }
+        public SegmentType Type => Group.Type;
         public SegmentGroup Group { get; private set; }
+        public string GetFilePath(Segment _seg) => $"{_seg.Parent.DirPath}/{_seg.Id}{FileExtensionName}";
 
-        public abstract void Load(int _segId, LoadArgs? _args);
-        public abstract void Save(int _segId, SaveArgs? _args);
+        public abstract void Load(Segment _seg, LoadArgs? _args);
+        public abstract void Save(Segment _seg, SaveArgs? _args);
 
         public void SetGroup(SegmentGroup _group) => Group = _group;
 
@@ -33,6 +34,10 @@ namespace P4VHelper.Engine.Collection
             SegmentIo io = null;
             if (_type == SegmentType.Changelist)
                 io = new Changelist();
+            else if (_type == SegmentType.ChangelistByUser)
+                io = new Changelist();
+
+
             if (io == null) 
                 throw new Exception("알 수 없는 세그먼트 타입입니다.");
 
@@ -43,47 +48,42 @@ namespace P4VHelper.Engine.Collection
         public class Changelist : SegmentIo
         {
             public override string FileExtensionName => ".bin";
-            public override SegmentType Type => SegmentType.Changelist;
-            public string GetFilePath(Segment _seg) => $"{_seg.Parent.DirPath}/{_seg.Id}{FileExtensionName}";
-
-            public override void Load(int _segId, LoadArgs? _args)
+            public override void Load(Segment _seg, LoadArgs? _args)
             {
-                Segment seg = Group[_segId];
                 LoadArgs.Changelist? args = _args as LoadArgs.Changelist;
                 bool forceServer = args?.ForceServer ?? false;
 
                 if (forceServer)
                 {
-                    LoadFromServer(seg);
+                    LoadFromServer(_seg);
                 }
                 else
                 {
-                    if (seg.State == SegmentState.Disk)
+                    if (_seg.State == SegmentState.Disk)
                     {
-                        if (!LoadFromFile(seg))
+                        if (!LoadFromFile(_seg))
                         {
-                            LoadFromServer(seg);
+                            LoadFromServer(_seg);
                         }
                     }
                     else
                     {
                         // 이미 메모리에 올라와있는 경우에는 서버에서 로딩
-                        LoadFromServer(seg);
+                        LoadFromServer(_seg);
                     }
                 }
             }
 
-            public override void Save(int _segId, SaveArgs? _args)
+            public override void Save(Segment _seg, SaveArgs? _args)
             {
-                Segment seg = Group[_segId];
-                string path = GetFilePath(seg);
-                string dir = seg.Parent.DirPath;
+                string path = GetFilePath(_seg);
+                string dir = _seg.Parent.DirPath;
                 SaveArgs.Changelist? args = _args as SaveArgs.Changelist;
                 bool forceServer = args?.ForceServer ?? false;
 
-                if (seg.State == SegmentState.Disk)
+                if (_seg.State == SegmentState.Disk)
                 {
-                    Load(_segId, new LoadArgs.Changelist() { ForceServer = forceServer });
+                    Load(_seg, new LoadArgs.Changelist() { ForceServer = forceServer });
                 }
 
                 if (!Directory.Exists(dir))
@@ -91,16 +91,16 @@ namespace P4VHelper.Engine.Collection
                     Directory.CreateDirectory(dir);
                 }
 
-                int byteSize = seg.CalculateSize();
+                int byteSize = _seg.CalculateSize();
                 byte[] bytes = ArrayPool<byte>.Shared.Rent(byteSize);
                 MemoryStream stream = new MemoryStream(bytes);
                 BinaryWriter writer = new BinaryWriter(stream);
 
                 writer.Write(0);
-                writer.Write(seg.List.Count);
-                for (int i = 0; i < seg.List.Count; ++i)
+                writer.Write(_seg.List.Count);
+                for (int i = 0; i < _seg.List.Count; ++i)
                 {
-                    P4VChangelist elem = seg.List[i] as P4VChangelist;
+                    P4VChangelist elem = _seg.List[i] as P4VChangelist;
                     elem.WriteTo(writer);
                 }
 
@@ -110,12 +110,12 @@ namespace P4VHelper.Engine.Collection
                 writer.Write(checksum);
                 FileEx.WriteAllBytes(path, bytes, 0, writePos);
                 ArrayPool<byte>.Shared.Return(bytes);
-                seg.Checksum = checksum;
+                _seg.Checksum = checksum;
 
                 // 메모리에 캐싱되지 않는 세그먼트는 반환토록 함
-                if (seg.State == SegmentState.Disk)
+                if (_seg.State == SegmentState.Disk)
                 {
-                    seg.Clear();
+                    _seg.Clear();
                 }
             }
 
@@ -156,6 +156,20 @@ namespace P4VHelper.Engine.Collection
                 }
                 ArrayPool<byte>.Shared.Return(bytes);
                 return true;
+            }
+        }
+
+        public class ChangelistByUser : SegmentIo
+        {
+            public override string FileExtensionName => ".bin";
+            public override void Load(Segment _seg, LoadArgs? _args)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Save(Segment _seg, SaveArgs? _args)
+            {
+                throw new NotImplementedException();
             }
         }
     }

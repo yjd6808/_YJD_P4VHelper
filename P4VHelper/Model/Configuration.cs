@@ -2,12 +2,14 @@
 
 using System.Net.Mime;
 using System.Windows;
+using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Linq;
 using P4VHelper.Base;
 using P4VHelper.Engine.Collection;
 using P4VHelper.Engine.Model;
 using static P4VHelper.Base.Extension.InterlockedEx;
+using static P4VHelper.Engine.Model.P4VConfig;
 
 namespace P4VHelper.Model
 {
@@ -48,6 +50,16 @@ namespace P4VHelper.Model
             }
         }
 
+        private static SegmentType ParseSegmentType(string _type)
+        {
+            if (_type == "changelist")
+                return SegmentType.Changelist;
+            if (_type == "changelistbyuser")
+                return SegmentType.ChangelistByUser;
+
+            throw new Exception("올바르지 않은 세그먼트 그룹 타입입니다.");
+        }
+
         public static Configuration Load()
         {
             Configuration config = new Configuration();
@@ -69,15 +81,24 @@ namespace P4VHelper.Model
 
                 string groupType = segElement.Attribute("type").Value;
 
-                if (groupType == "changelist")
-                    segmentGroup.Type = SegmentType.Changelist;
+                segmentGroup.Type = ParseSegmentType(groupType);
+                XAttribute? refTypeAttribute = segElement.Attribute("ref_type");
+                XAttribute? refAliasAttribute = segElement.Attribute("ref_alias");
+
+                if (refTypeAttribute != null || refAliasAttribute != null)
+                {
+                    SegmentType refType = ParseSegmentType(refTypeAttribute.Value);
+                    string refAlias = refAliasAttribute.Value;
+
+                    P4VConfig.SegmentGroup refSegmentGorup = p4.GetSegmentGroup(refType, refAlias);
+                    segmentGroup.Ref = refSegmentGorup;
+                }
                 else
-                    throw new Exception("올바르지 않은 세그먼트 그룹 타입입니다.");
-
-
-                segmentGroup.Path = segElement.Attribute("path").Value;
-                segmentGroup.Alias = segElement.Attribute("alias").Value;
-                segmentGroup.Id = P4VConfig.SegmentGroup.s_Count++;
+                {
+                    segmentGroup.Path = segElement.Attribute("path").Value;
+                    segmentGroup.Alias = segElement.Attribute("alias").Value;
+                }
+                
                 segmentGroup.CachedSegmentCount = int.Parse(segElement.Attribute("cached_segment_count").Value);
 
                 IEnumerable<XElement> filters = segElement.Elements("Filter");
@@ -97,7 +118,6 @@ namespace P4VHelper.Model
                     else
                         throw new Exception("올바르지 않은 필터 모드입니다.");
 
-
                     if (filterType == "string")
                         filter.Type = P4VConfig.SegmentGroup.FilterType.String;
                     else if (filterType == "type")
@@ -114,12 +134,9 @@ namespace P4VHelper.Model
                 }
 
                 segmentGroup.ConstructRegex();
-
-
-                p4.SegGroupMap[segmentGroup.Id] = segmentGroup;
+                p4.AddSegmentGroup(segmentGroup);
             }
 
-            p4.Validate();
             return config;
         }
     }

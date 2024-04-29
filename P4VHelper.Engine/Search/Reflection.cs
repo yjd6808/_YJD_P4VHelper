@@ -5,14 +5,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using P4VHelper.Engine.Collection;
 
 namespace P4VHelper.Engine.Search
 {
-    public abstract class Reflection<T> where T : ISearchable
+    public interface IReflection
     {
-        public static ThreadLocal<IFieldHolder>[] holders_;
-        public static Action<T, IFieldHolder>[] setters_;
-        public static Func<T, IFieldHolder>[] getters_;
+        public SegmentType GetSegType(int _member);
+    }
+
+    public abstract class Reflection<T> : IReflection where T : ISegmentElement
+    {
+        public Action<T, IFieldHolder>[] setters_;
+        public Func<T, IFieldHolder>[] getters_;
+        public SegmentType[] segTypes_;
 
         public int maxKey_;
 
@@ -21,28 +27,49 @@ namespace P4VHelper.Engine.Search
             maxKey_ = _maxKey;
         }
 
-        public IFieldHolder GetField(T _searchable, int _member)
+        /// <summary>
+        /// T 객체의 _member에 해당하는 멤버변수를 가져온다
+        /// </summary>
+        public IFieldHolder GetField(T _segElem, int _member)
         {
             if (_member < 0 || _member >= maxKey_ )
                 throw new ArgumentOutOfRangeException();
 
-            return getters_[_member](_searchable);
+            return getters_[_member](_segElem);
+        }
+
+        /// <summary>
+        /// T 객체의 _member에 해당하는 멤버변수는 어떤 타입의 세그먼트 정보를 가지고 있는지 반환한다.
+        /// UserName의 경우 Segmenttype.Changelist에서도 검색할 수 있지만 더 효율적으로 이름만 인덱싱하여 검색하는 경우가 있어서 추가하였다.
+        /// UserName은 SegmentType.ChangelistByUser 타입의 세그먼트에서 먼저 검색한다.
+        /// </summary>
+        public SegmentType GetSegType(int _member)
+        {
+            if (_member < 0 || _member >= maxKey_)
+                throw new ArgumentOutOfRangeException();
+
+            return segTypes_[_member];
         }
     }
 
     public class ReflectionMgr
     {
-        public static object[] reflections_;
+        public static IReflection[] reflections_;
 
         static ReflectionMgr()
         {
-            reflections_ = new object[(int)SearchableType.Max];
+            reflections_ = new IReflection[(int)SegmentType.Max];
             reflections_[0] = new P4VChangelist.Reflection();
         }
 
-        public static Reflection<T> Get<T>(T _searchable) where T : ISearchable
+        public static Reflection<T> Get<T>(T _elem) where T : ISegmentElement
         {
-            return (Reflection<T>)reflections_[(int)_searchable.SearchableType];
+            return (Reflection<T>)reflections_[(int)_elem.Type];
+        }
+
+        public static IReflection Get(SegmentType _type)
+        {
+            return reflections_[(int)_type];
         }
     }
 }

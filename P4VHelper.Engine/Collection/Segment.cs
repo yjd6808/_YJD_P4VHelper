@@ -30,6 +30,7 @@ namespace P4VHelper.Engine.Collection
     public enum SegmentType
     {
         Changelist,
+        ChangelistByUser,
         Max,
     }
 
@@ -111,7 +112,7 @@ namespace P4VHelper.Engine.Collection
             lock (this)
             {
                 ThrowIfNotReady();
-                Parent.Io.Load(id_, _args);
+                Parent.Io.Load(this, _args);
                 state_ = SegmentState.Memory;
             }
         }
@@ -122,7 +123,7 @@ namespace P4VHelper.Engine.Collection
             {
                 ThrowIfNotReady();
                 ThrowIfNotLoaded();
-                Parent.Io.Save(id_, _args);
+                Parent.Io.Save(this, _args);
             }
         }
 
