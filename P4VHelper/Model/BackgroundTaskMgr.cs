@@ -50,10 +50,7 @@ namespace P4VHelper.Model
         /// <summary>
         /// 대기중인 작업 수
         /// </summary>
-        public bool WaitingTaskCount
-        {
-            get => LockEx.Do(this, () => WaitingTaskList.Count > 0);
-        }
+        public bool WaitingTaskCount => LockEx.Do(this, () => WaitingTaskList.Count > 0);
 
         /// <summary>
         /// 실행중이거나 대기중인 작업 수
@@ -149,6 +146,8 @@ namespace P4VHelper.Model
                     }
                 }
 
+                WaitingTaskList.Clear();
+
                 foreach (var thread in threads_)
                 {
                     thread.IsRunning = false;
@@ -160,6 +159,25 @@ namespace P4VHelper.Model
             foreach (var t in threads_)
             {
                 t.Join();
+            }
+        }
+
+        public int InterruptIf(Predicate<BackgroundTask> _predicate, bool _containRunningTask = true)
+        {
+            int count = 0;
+            lock (this)
+            {
+                foreach (var task in RunningTaskList)
+                {
+                    if (_predicate(task))
+                    {
+                        task._OnInterruptRequested();
+                        count++;
+                    }
+                }
+
+                count += WaitingTaskList.RemoveAllIf(_predicate);
+                return count;
             }
         }
 
@@ -201,11 +219,23 @@ namespace P4VHelper.Model
         /// 어떤 쓰레드에서도 호출 가능
         /// </summary>
         /// <param name="task">실행할 작업</param>
-        public void Run(BackgroundTask _task)
+        public void Run(BackgroundTask _task, bool _removeSameClass = false)
         {
             _task._OnWaiting();
             lock (this)
             {
+                int removedSameClassTaskCount = 0;
+                if (_removeSameClass)
+                {
+                    removedSameClassTaskCount = InterruptIf(task => task.ClassId == _task.ClassId);
+
+                    if (removedSameClassTaskCount > 0)
+                    {
+                        int a = 40;
+                    }
+
+                }
+
                 WaitingTaskList.AddLast(_task);
                 condVar_.NotifyOne(this);
             }

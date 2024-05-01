@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using P4VHelper.Base.Collection;
@@ -26,15 +27,19 @@ namespace P4VHelper.ViewModel
         public BackgroundTaskMgr TaskMgr { get; }
         public P4VEngine Engine { get; }
         public Configuration Config { get; }
-        public ObservableRangeCollection<P4VChangelist> HistorySearchResult { get; } = new ();
+        public SearchState SearchState { get; }
+        public WpfObservableRangeCollection<P4VChangelist> HistorySearchResult { get; } = new ();
+        public bool IsLoaded { get; private set; }              // 로딩시 설정됨
+        public string TabName { get; set; } = string.Empty;     // 탭 변경시 설정됨
 
         public MainViewModel(MainView _view)
         {
             View = _view;
-            Commander = new (this);
+            Commander = new(this);
             TaskMgr = BackgroundTaskMgr.GetInstance(8, this);
             Config = Configuration.Load();
             Engine = new P4VEngine(Config.P4VConfig);
+            SearchState = new SearchState();
 
             //HistorySearchResult.Add(new P4VChangelist()
             //{
@@ -63,9 +68,9 @@ namespace P4VHelper.ViewModel
 
         public async Task Loaded()
         {
+            IsLoaded = true;
             Logger = new MainLogger(View.LogListBox);
             Logger.Add(new DebugLogger());
-            await Engine.ConnectAsync();
         }
     }
 }

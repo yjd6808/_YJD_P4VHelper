@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using P4VHelper.API;
 using P4VHelper.Base.Notifier;
 using P4VHelper.Engine.Collection;
 using P4VHelper.Engine.Model;
@@ -16,12 +17,13 @@ namespace P4VHelper.Engine
     public class P4VEngine
     {
         public P4VConfig Config { get; }
-        public SegmentMgr Mgr { get; }
+        public SegmentMgr SegmentMgr { get; }
+        public bool IsConnected => P4.IsConnected();
 
         public P4VEngine(P4VConfig _config)
         {
             Config = _config;
-            Mgr = new SegmentMgr(this);
+            SegmentMgr = new SegmentMgr(this);
         }
 
         public Task ConnectAsync()

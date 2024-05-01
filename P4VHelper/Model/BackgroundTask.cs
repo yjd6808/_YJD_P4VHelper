@@ -44,9 +44,19 @@ namespace P4VHelper.Model
         protected BackgroundTaskState state_;
 
         /// <summary>
-        /// 작업 이름
+        /// 태스크 타입 이름
         /// </summary>
-        public abstract string Name { get; }
+        public string TypeName => GetType().Name;
+
+        /// <summary>
+        /// 태스크 작업 분류
+        /// </summary>
+        public virtual string ClassId => TypeName;
+
+        /// <summary>
+        /// 작업 설명
+        /// </summary>
+        public abstract string Description { get; }
 
         /// <summary>
         /// 자세히 보기가 가능한 작업
@@ -111,7 +121,7 @@ namespace P4VHelper.Model
 
         public Exception? __Execute()
         {
-#if DEBUG
+
             try
             {
                 Execute();
@@ -122,17 +132,7 @@ namespace P4VHelper.Model
                 state_ = BackgroundTaskState.InterruptRequested;
                 return null;
             }
-#else
-            try
-            {
-                Execute();
-                return null;
-            }
-            catch (ProgressNotifer.InterruptException e)
-            {
-                state_ = BackgroundTaskState.InterruptRequested;
-                return null;
-            }
+#if !DEBUG
             catch (Exception e)
             {
                 state_ = BackgroundTaskState.Error;
@@ -246,7 +246,7 @@ namespace P4VHelper.Model
                 {
                     OnPropertyChanged(nameof(State));
                     OnPropertyChanged(nameof(IsRunning));
-                    OnPropertyChanged(nameof(Name));
+                    OnPropertyChanged(nameof(Description));
                     Notifier.First.NotifyProperty("Percent");
                     Notifier.First.NotifyProperty("ProgressText");
 
@@ -338,7 +338,7 @@ namespace P4VHelper.Model
         {
             if (state_ == BackgroundTaskState.Finished)
             {
-                Mgr.ViewModel.Logger?.WriteDebug($"{Name} 작업 완료");
+                Mgr.ViewModel.Logger?.WriteDebug($"{Description} 작업 완료");
             }
         }
         protected virtual void OnViewDetailChanged(bool _changed) {}

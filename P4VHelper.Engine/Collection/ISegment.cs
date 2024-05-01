@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using P4VHelper.Engine.Param;
 using P4VHelper.Engine.Search;
 
 namespace P4VHelper.Engine.Collection
@@ -31,6 +32,6 @@ namespace P4VHelper.Engine.Collection
         /// <summary>
         /// 파라미터 정보와 일치하는 대상인지 검사한다.
         /// </summary>
-        bool Match(SearchParam _param) => Matchers.IsMatch(this, _param);
+        bool IsMatch(SearchParam _param) => Matchers.IsMatch(this, _param);
     }
 }

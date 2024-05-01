@@ -10,28 +10,26 @@ using P4VHelper.Base.Extension;
 using P4VHelper.Base.Notifier;
 using P4VHelper.Engine.Cache;
 using P4VHelper.Engine.Model;
+using P4VHelper.Engine.Param;
 using P4VHelper.Engine.Search;
-
 using NativeChangelist = Perforce.P4.Changelist;
 
 namespace P4VHelper.Engine.Collection
 {
-   
+
     public class SegmentMgr
     {
         private readonly List<SegmentGroup> groups_;
         private readonly P4VEngine engine_;
-        private readonly TimeCache timeCache_;
 
         public SegmentMgr(P4VEngine _engine)
         {
             engine_ = _engine;
-            timeCache_ = new TimeCache();
             groups_ = ArrayEx.Create<SegmentGroup>(_engine.Config.Count, () => null).ToList();
 
             for (int i = 0; i < _engine.Config.Count; ++i)
             {
-                P4VConfig.SegmentGroup groupConfig = engine_.Config.GetSegmentGroupById(i);
+                P4VConfig.SegmentGroup groupConfig = engine_.Config.GetGroupById(i);
                 groups_[i] = new SegmentGroup(groupConfig);
             }
         }
@@ -72,6 +70,20 @@ namespace P4VHelper.Engine.Collection
             throw new Exception($"{_alias} {_member}에 해당하는 세그먼트 그룹을 찾지 못함");
         }
 
+        public List<SegmentGroup> GetAliasGroup(string _alias)
+        {
+            List<SegmentGroup> groups = new List<SegmentGroup>(groups_.Count);
+
+            for (int i = 0; i < groups_.Count; ++i)
+            {
+                SegmentGroup group = groups_[i];
+                if (group.Config.Alias == _alias)
+                    groups.Add(group);
+                    
+            }
+            return groups;
+        }
+
         public SegmentGroup GetGroupById(int _id)
         {
             return groups_[_id];
@@ -88,84 +100,18 @@ namespace P4VHelper.Engine.Collection
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="_segType">로딩할 세그먼트</param>
-        /// <param name="_alias"></param>
-        /// <param name="_notifier"></param>
-        /// <param name="_loadCount"></param>
-        /// <param name="_save"></param>
-        /// <param name="_loadArgs"></param>
-        /// <param name="_saveArgs"></param>
-        /// <exception cref="Exception"></exception>
-        public void Load(SegmentType _segType, string _alias, ProgressNotifer _notifier, int _loadCount = Int32.MaxValue, bool _save = false, LoadArgs? _loadArgs = null, SaveArgs? _saveArgs = null)
+        public void Load(LoadParam _param)
         {
-            SegmentGroup group = GetGroup(_segType, _alias);
-
-            API.P4.SetPath(group.Config.Path);
-
-            NativeChangelist changelist;
-
-            if (timeCache_.Elapsed(group.Id))
-            {
-                changelist = API.P4.GetLastChangelist();
-                timeCache_.Set(group.Id, changelist);
-            }
-            else
-            {
-                changelist = timeCache_.Get<NativeChangelist>(group.Id);
-            }
-
-            int totalRevCount = changelist.Id;
-            int totalSegmentCount = (totalRevCount - 1) / engine_.Config.SegmentSize + 1;
-
-            group.Ready(totalSegmentCount);
-
-            if (totalRevCount <= 0)
-            {
-                _notifier.Progress();
-                return;
-            }
-
-            int availableLoadCount = _loadCount > totalSegmentCount ? totalSegmentCount : totalSegmentCount - _loadCount;
-
-            int startSegmentId = totalSegmentCount - 1;
-            int endSegmentid = _loadCount > totalSegmentCount ? 0 : availableLoadCount;
-
-            int leftSaveCount = _save ? availableLoadCount : 0;
-            int leftCacheCount = _loadCount < group.Config.CachedSegmentCount ? _loadCount : group.Config.CachedSegmentCount;
-
-            int curLoadedCount = 0;
-            int curCachedSegmentCount = 0;
-
-            _notifier.Start(leftSaveCount + leftCacheCount);
-
-            for (int segId = startSegmentId; segId >= endSegmentid; --segId)
-            {
-                Segment? seg = group.At(segId);
-
-                if (seg == null)
-                    throw new Exception($"{segId} 세그먼트가 존재하지 않습니다");
-
-                seg.Ready(engine_.Config.SegmentSize);
-
-                if (curCachedSegmentCount < group.Config.CachedSegmentCount)
-                {
-                    seg.Load(_loadArgs);
-                    _notifier.Progress();
-                    curCachedSegmentCount++;
-                }
-
-                if (_save)
-                {
-                    seg.Save(_saveArgs);
-                    _notifier.Progress();
-                }
-
-                curLoadedCount++;
-            }
+            _param.Validate();
+            SegmentGroup group = GetGroup(_param.Type, _param.Alias);
+            group.Load(_param);
         }
 
+        public void Search(SearchParam _param)
+        {
+            _param.Validate();
+            SegmentGroup group = GetGroup(_param.Alias, _param.Member);
+            group.Search(_param);
+        }
     }
 }

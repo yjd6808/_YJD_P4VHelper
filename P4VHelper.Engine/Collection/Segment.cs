@@ -6,27 +6,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using P4VHelper.Base.Extension;
 using P4VHelper.Base.Notifier;
 using P4VHelper.Engine.Model;
+using P4VHelper.Engine.Param;
 using P4VHelper.Engine.Search;
-using Perforce.P4;
 
 namespace P4VHelper.Engine.Collection
 {
-    // 어디의 데이터를 읽어서 메모리에 저장할지
-    public enum SegmentLoadFrom
-    {
-        Server,
-        File,
-    }
-
-    // 어디의 데이터를 읽어서 저장할지
-    public enum SegmentSaveFrom
-    {
-        Server,
-        Memory,
-    }
-
     public enum SegmentType
     {
         Changelist,
@@ -36,46 +23,59 @@ namespace P4VHelper.Engine.Collection
 
     public enum SegmentState
     {
-        Disk,       // 파일에 저장되거나 파일로도 저장되지 않은 상태
+        None,       // 아무것도 없는 상태
+        Disk,       // 해당 세그먼트 파일이 존재하는 상태
         Memory,     // 메모리에 저장되어 있는 상태
     }
 
     public class Segment
     {
         protected int id_;
-        protected List<ISegmentElement>? list_;
+        protected List<ISegmentElement>? elements_;
         protected SegmentState state_;
 
         public int Id => id_;
-        public int Count => list_?.Count ?? 0;
-        public int Capacity => list_?.Capacity ?? 0;
+        public int Count => elements_?.Count ?? 0;
+        public int Capacity => elements_?.Capacity ?? 0;
         public SegmentState State => state_;
-        public List<ISegmentElement>? List => list_;
+        public List<ISegmentElement>? Elements => elements_;
         public SegmentGroup Parent { get; }
         public SegmentType Type => Parent.Type;
         public int StartId => id_ * Capacity + 1;
         public int EndId => (id_ + 1) * Capacity;
         public uint Checksum { get; set; }
+        public string FilePath => Parent.Io.GetFilePath(this);
 
         public Segment(int _id, SegmentGroup _group)
         {
             id_ = _id;
-            state_ = SegmentState.Disk;
             Parent = _group;
+
+            if (File.Exists(FilePath))
+            {
+                byte[] checksumBytes = FileEx.ReadBytes(FilePath, 4);
+
+                state_ = SegmentState.Disk;
+                Checksum = BitConverter.ToUInt32(checksumBytes);
+            }
+            else
+            {
+                state_ = SegmentState.None;
+            }
         }
 
         public void Ready(int _capacity)
         {
             lock (this)
             {
-                if (list_ == null)
+                if (elements_ == null)
                 {
-                    list_ = new List<ISegmentElement>(_capacity);
+                    elements_ = new List<ISegmentElement>(_capacity);
                 }
 
-                if (list_.Capacity != _capacity)
+                if (elements_.Capacity != _capacity)
                 {
-                    list_ = new List<ISegmentElement>(_capacity);
+                    elements_ = new List<ISegmentElement>(_capacity);
                 }
             }
         }
@@ -84,9 +84,9 @@ namespace P4VHelper.Engine.Collection
         {
             lock (this)
             {
-                if (list_ != null)
+                if (elements_ != null)
                 {
-                    list_.Clear();
+                    elements_.Clear();
                     state_ = SegmentState.Disk;
                 }
             }
@@ -98,7 +98,7 @@ namespace P4VHelper.Engine.Collection
             {
                 ThrowIfNotReady();
 
-                list_.Add(_item);
+                elements_.Add(_item);
 
                 if (_sort)
                 {
@@ -127,6 +127,45 @@ namespace P4VHelper.Engine.Collection
             }
         }
 
+        public bool Search(SearchParam _param)
+        {
+            int enteredSlot = _param.Result.Enter();
+            _param.Notifier?.Progress(0);
+            bool finished = false;
+
+            lock (this)
+            {
+                ThrowIfNotReady();
+                ThrowIfNotLoaded();
+
+                if (state_ == SegmentState.Disk)
+                {
+                    Load(null);
+                }
+
+                foreach (ISegmentElement element in elements_)
+                {
+                    if (element.IsMatch(_param))
+                    {
+                        ProgressState state = _param.Notifier.Progress(1);
+                        _param.Result.Slot[enteredSlot].Add(element);
+
+                        if (state.HasFlag(ProgressState.Finished))
+                        {
+                            finished = true;
+                            break;
+                        }
+                    }
+                }
+
+                Clear();
+            }
+
+            _param.NotifySlot(enteredSlot);
+            _param.Result.Leave(enteredSlot);
+            return finished;
+        }
+
         public int CalculateSize()
         {
             lock (this)
@@ -136,7 +175,7 @@ namespace P4VHelper.Engine.Collection
                 int size = sizeof(uint) + sizeof(int); // checksum + count
                 for (int i = 0; i < Count; ++i)
                 {
-                    size += list_[i].CalculateSize();
+                    size += elements_[i].CalculateSize();
                 }
 
                 return size;
@@ -149,7 +188,7 @@ namespace P4VHelper.Engine.Collection
             {
                 ThrowIfNotReady();
 
-                list_.Sort((_x, _y) => _y.Key.CompareTo(_x.Key));
+                elements_.Sort((_x, _y) => _y.Key.CompareTo(_x.Key));
             }
         }
 
@@ -160,13 +199,13 @@ namespace P4VHelper.Engine.Collection
 
         protected void ThrowIfNotReady()
         {
-            if (list_ == null)
+            if (elements_ == null)
                 throw new Exception("리스트가 준비되지 않았습니다");
         }
 
         protected void ThrowIfNotLoaded()
         {
-            if (state_ == SegmentState.Memory && (list_ == null || list_.Count == 0))
+            if (state_ == SegmentState.None || elements_ == null)
                 throw new Exception("로드되지 않은 세그먼트입니다.");
         }
 

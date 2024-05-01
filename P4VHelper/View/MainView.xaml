@@ -114,7 +114,9 @@
                 </Menu>
             </StackPanel>
 
-            <TabControl Grid.Row="2">
+            <TabControl Grid.Row="2"
+                        Name="MainTabControl"
+                        SelectionChanged="MainTabControl_OnSelectionChanged">
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
@@ -177,6 +179,7 @@
                                       Name="HistoryRuleComboBox"
                                       VerticalContentAlignment="Center"
                                       ItemsSource="{Binding Source={StaticResource RuleEnum}}"
+                                      SelectionChanged="HistoryRuleComboBox_OnSelectionChanged"
                                       SelectedIndex="0">
                             </ComboBox>
 
@@ -187,8 +190,8 @@
                                                    VerticalContentAlignment="Center"
                                                    TextChanged="HistorySearchTextBox_OnTextChanged"
                                                    PreviewTextInput="HistorySearchTextBox_OnPreviewTextInput"
-                                                   Text="안녕"
-                                                   Placeholder="안녕하세요">
+                                                   Text=""
+                                                   Placeholder="검색할 내용을 입력해주세요">
 
                             </uc:PlaceholderTextBox>
                             <Button Grid.Column="4"
@@ -209,9 +212,16 @@
                                 </CollectionViewSource>
                             </Grid.Resources>
 
+                            <!--<DataGrid ItemsSource="{Binding ViewModel.HistorySearchResult}"-->
+                            
                             <DataGrid ItemsSource="{Binding Source={StaticResource ChangelistViewSource}}"
+                            
+                                Name="HistorySearchResultDataGrid"
                                       IsReadOnly="True"
                                       AutoGenerateColumns="False"
+                                      VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                      VirtualizingPanel.VirtualizationMode="Standard"
+                                      VirtualizingPanel.IsVirtualizing="True"
                                       GridLinesVisibility="None">
 
                                 <!-- 히스토리/테이블/컬럼-->

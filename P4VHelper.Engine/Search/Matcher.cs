@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using P4VHelper.Engine.Collection;
+using P4VHelper.Engine.Param;
 
 namespace P4VHelper.Engine.Search
 {
@@ -55,11 +56,11 @@ namespace P4VHelper.Engine.Search
             return s_MatcherList[index];
         }
 
-        public static bool IsMatch<T>(T _searchable, SearchParam _param) where T : ISegmentElement
+        public static bool IsMatch(ISegmentElement _element, SearchParam _param)
         {
-            IMatcher matcher = Get(_param.Input.Type, _param.Rule);
-            Reflection<T> reflection = ReflectionMgr.Get(_searchable);
-            IFieldHolder src = reflection.GetField(_searchable, _param.Member);
+            IReflection reflection = ReflectionMgr.Get(_element.Type);
+            IFieldHolder src = reflection.GetField(_element, _param.Member);
+            IMatcher matcher = Get(src.Type, _param.Rule);
             return matcher.Match(src, _param.Input);
         }
     }
@@ -70,46 +71,46 @@ namespace P4VHelper.Engine.Search
         public Rule Rule { get; }
         public FieldType Type { get; }
         public int Index => (int)Rule.Max * (int)Type + (int)Rule;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst);
+        public bool Match(IFieldHolder _src, string _dst);
     }
 
     public class MatcherIntContain : IMatcher
     {
         public Rule Rule => Rule.Contain;
         public FieldType Type => FieldType.Int;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst)
-            => _src.Value<int>().ToString().Contains(_dst.Value<int>().ToString());
+        public bool Match(IFieldHolder _src, string _dst)
+            => _src.Value<int>().ToString().Contains(_dst);
     }
 
     public class MatcherIntExact : IMatcher
     {
         public Rule Rule => Rule.Exact;
         public FieldType Type => FieldType.Int;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst) 
-            => _src.Value<int>() == _dst.Value<int>();
+        public bool Match(IFieldHolder _src, string _dst) 
+            => _src.Value<int>() == int.Parse(_dst);
     }
 
     public class MatcherIntStartWith : IMatcher
     {
         public Rule Rule => Rule.StartWith;
         public FieldType Type => FieldType.Int;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst)
-            => _src.Value<int>().ToString().StartsWith(_dst.Value<int>().ToString());
+        public bool Match(IFieldHolder _src, string _dst)
+            => _src.Value<int>().ToString().StartsWith(_dst);
     }
 
     public class MatcherIntEndWith : IMatcher
     {
         public Rule Rule => Rule.EndWith;
         public FieldType Type => FieldType.Int;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst)
-            => _src.Value<int>().ToString().EndsWith(_dst.Value<int>().ToString());
+        public bool Match(IFieldHolder _src, string _dst)
+            => _src.Value<int>().ToString().EndsWith(_dst);
     }
 
     public class MatcherIntRegex : IMatcher
     {
         public Rule Rule => Rule.Regex;
         public FieldType Type => FieldType.Int;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst) 
+        public bool Match(IFieldHolder _src, string _dst) 
             => throw new NotImplementedException();
     }
 
@@ -117,38 +118,38 @@ namespace P4VHelper.Engine.Search
     {
         public Rule Rule => Rule.Contain;
         public FieldType Type => FieldType.String;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst) => _src.Value<string>().Contains(_dst.Value<string>());
+        public bool Match(IFieldHolder _src, string _dst) => _src.Value<string>().Contains(_dst);
     }
 
     public class MatcherStringExact : IMatcher
     {
         public Rule Rule => Rule.Exact;
         public FieldType Type => FieldType.String;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst)
-            => _src.Value<string>() == _dst.Value<string>();
+        public bool Match(IFieldHolder _src, string _dst)
+            => _src.Value<string>() == _dst;
     }
 
     public class MatcherStringStartWith : IMatcher
     {
         public Rule Rule => Rule.StartWith;
         public FieldType Type => FieldType.String;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst)
-            => _src.Value<string>().StartsWith(_dst.Value<string>());
+        public bool Match(IFieldHolder _src, string _dst)
+            => _src.Value<string>().StartsWith(_dst);
     }
 
     public class MatcherStringEndWith : IMatcher
     {
         public Rule Rule => Rule.EndWith;
         public FieldType Type => FieldType.String;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst)
-            => _src.Value<string>().EndsWith(_dst.Value<string>());
+        public bool Match(IFieldHolder _src, string _dst)
+            => _src.Value<string>().EndsWith(_dst);
     }
 
     public class MatcherStringRegex : IMatcher
     {
         public Rule Rule => Rule.Regex;
         public FieldType Type => FieldType.String;
-        public bool Match(IFieldHolder _src, IFieldHolder _dst) => Regex.IsMatch(_src.Value<string>(), _dst.Value<string>());
+        public bool Match(IFieldHolder _src, string _dst) => Regex.IsMatch(_src.Value<string>(), _dst);
     }
 }
 

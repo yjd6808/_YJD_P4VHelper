@@ -63,80 +63,85 @@ namespace P4VHelper.Model
         public static Configuration Load()
         {
             Configuration config = new Configuration();
-            P4VConfig p4 = config.p4_;
-
-            config.xDoc_ = XDocument.Load("configuration.xml");
-            XElement perforceElement = config.xDoc_.Descendants("P4VConfig").FirstOrDefault();
-
-            p4.Uri = perforceElement.Attribute("uri").Value;
-            p4.UserName = perforceElement.Attribute("user_name").Value;
-            p4.Workspace = perforceElement.Attribute("workspace").Value;
-            p4.ReadDelay = int.Parse(perforceElement.Attribute("read_delay").Value);
-            p4.RefreshSegmentCount = int.Parse(perforceElement.Attribute("refresh_segment_count").Value);
-            p4.SegmentSize = int.Parse(perforceElement.Attribute("segment_size").Value);
-
-            foreach (XElement segElement in perforceElement.Elements("SegmentGroup"))
+            try
             {
-                P4VConfig.SegmentGroup segmentGroup = new ();
+                P4VConfig p4 = config.p4_;
+                config.xDoc_ = XDocument.Load("configuration.xml");
+                XElement perforceElement = config.xDoc_.Descendants("P4VConfig").FirstOrDefault();
 
-                string groupType = segElement.Attribute("type").Value;
+                p4.Uri = perforceElement.Attribute("uri").Value;
+                p4.UserName = perforceElement.Attribute("user_name").Value;
+                p4.Workspace = perforceElement.Attribute("workspace").Value;
+                p4.ReadDelay = int.Parse(perforceElement.Attribute("read_delay").Value);
+                p4.RefreshSegmentCount = int.Parse(perforceElement.Attribute("refresh_segment_count").Value);
 
-                segmentGroup.Type = ParseSegmentType(groupType);
-                XAttribute? refTypeAttribute = segElement.Attribute("ref_type");
-                XAttribute? refAliasAttribute = segElement.Attribute("ref_alias");
-
-                if (refTypeAttribute != null || refAliasAttribute != null)
+                foreach (XElement segElement in perforceElement.Elements("SegmentGroup"))
                 {
-                    SegmentType refType = ParseSegmentType(refTypeAttribute.Value);
-                    string refAlias = refAliasAttribute.Value;
+                    P4VConfig.SegmentGroup segmentGroup = new();
 
-                    P4VConfig.SegmentGroup refSegmentGorup = p4.GetSegmentGroup(refType, refAlias);
-                    segmentGroup.Ref = refSegmentGorup;
-                }
-                else
-                {
-                    segmentGroup.Path = segElement.Attribute("path").Value;
-                    segmentGroup.Alias = segElement.Attribute("alias").Value;
-                }
-                
-                segmentGroup.CachedSegmentCount = int.Parse(segElement.Attribute("cached_segment_count").Value);
+                    string groupType = segElement.Attribute("type").Value;
 
-                IEnumerable<XElement> filters = segElement.Elements("Filter");
-                foreach (XElement filterElement in filters)
-                {
-                    var filter = new P4VConfig.SegmentGroup.Filter();
+                    segmentGroup.Type = ParseSegmentType(groupType);
+                    XAttribute? linkTypeAttribute = segElement.Attribute("link_type");
+                    XAttribute? linkAliasAttribute = segElement.Attribute("link_alias");
 
-                    string filterMode = filterElement.Attribute("mode").Value;
-                    string filterType = filterElement.Attribute("type").Value;
+                    if (linkTypeAttribute != null || linkAliasAttribute != null)
+                    {
+                        SegmentType linkType = ParseSegmentType(linkTypeAttribute.Value);
+                        string linkAlias = linkAliasAttribute.Value;
 
-                    if (filterMode == "start_with")
-                        filter.Mode = P4VConfig.SegmentGroup.FilterMode.StartWith;
-                    else if (filterMode == "contain")
-                        filter.Mode = P4VConfig.SegmentGroup.FilterMode.Contain;
-                    else if (filterMode == "end_with")
-                        filter.Mode = P4VConfig.SegmentGroup.FilterMode.EndWith;
+                        P4VConfig.SegmentGroup linkSegmentGorup = p4.GetGroup(linkType, linkAlias);
+                        segmentGroup.Link = linkSegmentGorup;
+                    }
                     else
-                        throw new Exception("올바르지 않은 필터 모드입니다.");
+                    {
+                        segmentGroup.Path = segElement.Attribute("path").Value;
+                        segmentGroup.Alias = segElement.Attribute("alias").Value;
+                    }
 
-                    if (filterType == "string")
-                        filter.Type = P4VConfig.SegmentGroup.FilterType.String;
-                    else if (filterType == "type")
-                        filter.Type = P4VConfig.SegmentGroup.FilterType.Type;
-                    else
-                        throw new Exception("올바르지 않은 필터 타입입니다.");
+                    segmentGroup.CachedSegmentCount = int.Parse(segElement.Attribute("cached_segment_count").Value);
+                    segmentGroup.SegmentSize = int.Parse(segElement.Attribute("segment_size").Value);
 
-                    filter.Value = filterElement.Attribute("value").Value;
+                    IEnumerable<XElement> filters = segElement.Elements("Filter");
+                    foreach (XElement filterElement in filters)
+                    {
+                        var filter = new P4VConfig.SegmentGroup.Filter();
 
-                    if (string.IsNullOrEmpty(filter.Value))
-                        throw new Exception("필터 value 애튜리뷰트가 비어있습니다.");
+                        string filterMode = filterElement.Attribute("mode").Value;
+                        string filterType = filterElement.Attribute("type").Value;
 
-                    segmentGroup.Filters.Add(filter);
+                        if (filterMode == "start_with")
+                            filter.Mode = P4VConfig.SegmentGroup.FilterMode.StartWith;
+                        else if (filterMode == "contain")
+                            filter.Mode = P4VConfig.SegmentGroup.FilterMode.Contain;
+                        else if (filterMode == "end_with")
+                            filter.Mode = P4VConfig.SegmentGroup.FilterMode.EndWith;
+                        else
+                            throw new Exception("올바르지 않은 필터 모드입니다.");
+
+                        if (filterType == "string")
+                            filter.Type = P4VConfig.SegmentGroup.FilterType.String;
+                        else if (filterType == "type")
+                            filter.Type = P4VConfig.SegmentGroup.FilterType.Type;
+                        else
+                            throw new Exception("올바르지 않은 필터 타입입니다.");
+
+                        filter.Value = filterElement.Attribute("value").Value;
+
+                        if (string.IsNullOrEmpty(filter.Value))
+                            throw new Exception("필터 value 애튜리뷰트가 비어있습니다.");
+
+                        segmentGroup.Filters.Add(filter);
+                    }
+
+                    segmentGroup.ConstructRegex();
+                    p4.AddSegmentGroup(segmentGroup);
                 }
-
-                segmentGroup.ConstructRegex();
-                p4.AddSegmentGroup(segmentGroup);
             }
-
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
             return config;
         }
     }

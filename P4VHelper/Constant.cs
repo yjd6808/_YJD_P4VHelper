@@ -19,7 +19,7 @@ namespace P4VHelper
         public const double STATUS_BAR_HEIGHT = 20.0;
         public const double STATUS_BAR_EXPANDED_DIVISION = 2.5;   // 확장 상태바의 높이는 MainView 높이의 1/2.5이다.
         public static readonly Thickness s_StatusBarHeightThickness = new (0, 0, 0, STATUS_BAR_HEIGHT);
-        public const string STATUS_BAR_RUNNING_THREAD_COUNT_STRING_FMT = "작업 실행중인 쓰레드 수 : {0}";     // 안씀
+        public const string STATUS_BAR_RUNNING_THREAD_COUNT_STRING_FMT = "작업 실행중인 쓰레드 수 : {0}";    // 안씀
         public const string STATUS_BAR_WATING_TASK_COUNT = "실행 대기중인 작업 수 : {1}";                    // 안씀
     }
 }

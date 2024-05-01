@@ -1,39 +1,34 @@
 ﻿using P4VHelper.Base.Notifier;
 using P4VHelper.Engine.Collection;
+using P4VHelper.Engine.Param;
 
 namespace P4VHelper.Model.TaskList
 {
     public class Load : BackgroundTask
     {
-        private readonly string searcherAlias_;
-        private readonly int count_;           // 로딩할 세그먼트 수
-        private readonly bool save_;
-        private readonly LoadArgs? loadArgs_;
-        private readonly SaveArgs? saveArgs_;
+        private readonly LoadParam param_;
 
-        public Load(string _alias, int _count, bool _save, LoadArgs? _loadArgs = null, SaveArgs? _saveArgs = null)
+        public Load(LoadParam _param)
         {
+            param_ = _param;
             Notifier = new ProgressNotifer(this);
             Notifier.AddEach();
 
-            searcherAlias_ = _alias;
-            count_ = _count;
-            save_ = _save;
-            loadArgs_ = _loadArgs;
-            saveArgs_ = _saveArgs;
+            param_.Notifier = Notifier;
         }
 
-        public override string Name => "체인지리스트를 읽어서 로컬에 저장한다.";
+        
+        public override string Description => "체인지리스트를 읽어서 로컬에 저장한다.";
         public override bool HasDetailView => false;
 
         public override void Execute()
         {
-            Mgr.ViewModel.Engine.Mgr.Load(SegmentType.Changelist, searcherAlias_, Notifier, count_, save_, loadArgs_, saveArgs_);
+            Mgr.ViewModel.Engine.SegmentMgr.Load(param_);
         }
 
         protected override void OnEndDispatched()
         {
-            Mgr.ViewModel.Logger?.WriteDebug($"{Name} 작업 완료");
+            Mgr.ViewModel.Logger?.WriteDebug($"{Description} 작업 완료");
         }
     }
 }

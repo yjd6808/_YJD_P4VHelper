@@ -10,6 +10,16 @@ namespace P4VHelper.Base.Extension
 {
     public static class FileEx
     {
+        public static byte[] ReadBytes(string _path, int size)
+        {
+            byte[] bytes = new byte[size];
+            using FileStream fs = new FileStream(_path, FileMode.Open, FileAccess.Read);
+            int readBytes = fs.Read(bytes, 0, size);
+            if (readBytes < size)
+                throw new Exception($"파일 크기가 {size}보다 작습니다.");
+            return bytes;
+        }
+
         public static int ReadAllBytes(string _path, byte[] _buffer)
         {
             const int chunkSize = 2048;

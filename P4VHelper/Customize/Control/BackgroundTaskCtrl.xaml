@@ -27,7 +27,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Grid ToolTip="작업 이름을 나타냅니다.">
-                                    <TextBlock Text="{Binding Name}"
+                                    <TextBlock Text="{Binding Description}"
                                                VerticalAlignment="Center" />
                                 </Grid>
 
@@ -75,7 +75,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Grid ToolTip="작업 이름을 나타냅니다.">
-                                    <TextBlock Text="{Binding Name}"
+                                    <TextBlock Text="{Binding Description}"
                                                VerticalAlignment="Center" />
                                 </Grid>
 

@@ -17,6 +17,7 @@ namespace P4VHelper.Command.MainView
         
         public ICommand Test { get; }
         public ICommand ShowStatusDetail { get; }
+        public ICommand SearchHistory { get; }
 
         public MainCommander(MainViewModel _viewModel)
         {
@@ -24,6 +25,7 @@ namespace P4VHelper.Command.MainView
 
             Add(Test = new Test(_viewModel));
             Add(ShowStatusDetail = new ShowStatusDetail(_viewModel));
+            Add(SearchHistory = new SearchHistory(_viewModel));
         }
     }
 }

@@ -3,15 +3,25 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace P4VHelper.Base.Notifier
 {
+    [Flags]
+    public enum ProgressState
+    {
+        None = 0,
+        Reported = 1,
+        Finished = 2,
+    }
+
+
     public abstract class ProgressUnit : Bindable
     {
-        public static readonly ProgressUnit s_Default = Factory.CreateEach(null, 0);
+        public static readonly ProgressUnit s_Default = Factory.CreateEach(0);
 
         public enum Type
         {
@@ -19,20 +29,12 @@ namespace P4VHelper.Base.Notifier
             Percent,        // 퍼센트 단위마다 알림
         }
 
-        protected ProgressNotifer? notifier_;
         protected int slot_;                        // 노티파이어의 몇번째 슬롯(인덱스)의 유닛인지
-        protected int notified_;                    // 마지막 알림처리된 인덱스
         protected int cur_;                         // 수행해야할 인덱스
         protected int max_;                         // 마지막 인덱스
-        protected Stopwatch? stopwatch_;             // 인터벌이 있는 경우 시간계산 용도
+        protected Stopwatch? stopwatch_;            // 인터벌이 있는 경우 시간계산 용도
         protected TimeSpan reportInterval_;         // 인터벌이 지난 경우 알림
         protected TimeSpan lastReportedElapsed_;    // 작업시작 마지막 작업을 수행했을 때의 경과 시작(ReportInterval을 사용하는 경우만)
-
-        public int Notified
-        {
-            get => notified_;
-            set => notified_= value;
-        }
 
         public int Cur
         {
@@ -52,10 +54,12 @@ namespace P4VHelper.Base.Notifier
             set => reportInterval_ = value;
         }
 
+        public bool IsFinished => cur_ >= max_;
+
         public double Percent => max_ > 0 ? (double)cur_ / max_ * 100.0f : 0.0f;
         public string ProgressText => $"{cur_} / {max_} ({Percent.ToString("0.00")}%)";
 
-        public abstract void Progress(int _count);
+        public abstract bool Progress(int _count);
         public abstract void OnStarted();
 
         public void Start(int _max)
@@ -70,36 +74,32 @@ namespace P4VHelper.Base.Notifier
 
         public static class Factory
         {
-            public static ProgressUnit CreateEach(ProgressNotifer _notifier, int _slot)
+            public static ProgressUnit CreateEach(int _slot)
             {
                 var each = new Each();
-                each.notifier_ = _notifier;
                 each.slot_ = _slot;
                 return each;
             }
 
-            public static ProgressUnit CreateEach(ProgressNotifer _notifier, int _slot, TimeSpan _reportInterval)
+            public static ProgressUnit CreateEach(int _slot, TimeSpan _reportInterval)
             {
                 var each = new Each();
-                each.notifier_ = _notifier;
                 each.slot_ = _slot;
                 each.reportInterval_ = _reportInterval;
                 each.stopwatch_ = new Stopwatch();
                 return each;
             }
 
-            public static ProgressUnit CreatePercent(ProgressNotifer _notifier, int _slot, float _percent)
+            public static ProgressUnit CreatePercent(int _slot, float _percent)
             {
                 var per = new _Percent(_percent);
-                per.notifier_ = _notifier;
                 per.slot_ = _slot;
                 return per;
             }
 
-            public static ProgressUnit CreatePercent(ProgressNotifer _notifier, int _slot, float _percent, TimeSpan _reportInterval)
+            public static ProgressUnit CreatePercent(int _slot, float _percent, TimeSpan _reportInterval)
             {
                 var per = new _Percent(_percent);
-                per.notifier_ = _notifier;
                 per.slot_ = _slot;
                 per.reportInterval_ = _reportInterval;
                 per.stopwatch_ = new Stopwatch();
@@ -113,7 +113,7 @@ namespace P4VHelper.Base.Notifier
             {
             }
 
-            public override void Progress(int _count)
+            public override bool Progress(int _count)
             {
                 Debug.Assert(max_ > 0, "작업량(max)가 설정되지 않았습니다.");
                 Debug.Assert(cur_ < max_, "Progress를 정해진 작업량(max)보다 더 많이 실행하였습니다");
@@ -121,19 +121,19 @@ namespace P4VHelper.Base.Notifier
 
                 if (reportInterval_ == TimeoutEx.s_InfiniteSpan)
                 {
-                    notifier_?.Report(slot_);
+                    return true;
                 }
-                else
-                {
-                    Debug.Assert(stopwatch_ is not null);
-                    TimeSpan elapsed = stopwatch_.Elapsed;
 
-                    if (elapsed >= lastReportedElapsed_ + reportInterval_)
-                    {
-                        notifier_?.Report(slot_);
-                        lastReportedElapsed_ = elapsed;
-                    }
+                Debug.Assert(stopwatch_ is not null);
+                TimeSpan elapsed = stopwatch_.Elapsed;
+
+                if (elapsed >= lastReportedElapsed_ + reportInterval_)
+                {
+                    lastReportedElapsed_ = elapsed;
+                    return true;
                 }
+
+                return false;
             }
         }
 
@@ -155,45 +155,41 @@ namespace P4VHelper.Base.Notifier
                 nextQuantity_ = quantity_;
             }
 
-            private void CalcNextQuantity()
+            private bool CalcNextQuantity()
             {
                 if (cur_ <= nextQuantity_)
-                    return;
+                    return false;
 
-                notifier_?.Report(slot_);
                 nextQuantity_ += quantity_;
+                return true;
             }
 
-            public override void Progress(int _count)
+            public override bool Progress(int _count)
             {
                 Debug.Assert(max_ > 0, "작업량(max)가 설정되지 않았습니다.");
                 Debug.Assert(cur_< max_, "Progress를 정해진 작업량(max)보다 더 많이 실행하였습니다");
                 cur_ += _count;
 
-                if (cur_ == max_)
+                if (cur_ >= max_)
                 {
-                    notifier_?.Report(slot_);
-                    return;
+                    return true;
                 }
 
                 if (reportInterval_ == TimeoutEx.s_InfiniteSpan)
                 {
-                    CalcNextQuantity();
+                    return CalcNextQuantity();
                 }
-                else
+
+                Debug.Assert(stopwatch_ is not null);
+                TimeSpan elapsed = stopwatch_.Elapsed;
+
+                if (elapsed >= lastReportedElapsed_ + reportInterval_)
                 {
-                    Debug.Assert(stopwatch_ is not null);
-                    TimeSpan elapsed = stopwatch_.Elapsed;
-
-                    if (elapsed >= lastReportedElapsed_ + reportInterval_)
-                    {
-                        notifier_?.Report(slot_);
-                        lastReportedElapsed_ = elapsed;
-                        return;
-                    }
-
-                    CalcNextQuantity();
+                    lastReportedElapsed_ = elapsed;
+                    return true;
                 }
+
+                return CalcNextQuantity();
             }
         }
     }

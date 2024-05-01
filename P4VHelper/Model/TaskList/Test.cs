@@ -10,7 +10,7 @@ namespace P4VHelper.Model.TaskList
             Notifier.AddEach();
         }
 
-        public override string Name => "숫자를 많이 센다";
+        public override string Description => "숫자를 많이 센다";
         public override bool HasDetailView => false;
 
         public override void Execute()

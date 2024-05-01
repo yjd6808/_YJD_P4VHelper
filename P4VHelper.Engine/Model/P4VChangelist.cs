@@ -148,30 +148,25 @@ namespace P4VHelper.Engine.Model
 
         public class Reflection : Reflection<P4VChangelist>
         {
-            static Reflection()
+            public Reflection() : base((int)Member.Max)
             {
-                setters_ = new Action<P4VChangelist, IFieldHolder>[(int)Member.Max];
-                setters_[(int)Member.Revision]      = ((_changelist, _holder) => _holder.Set(_changelist.Revision));
-                setters_[(int)Member.Date]          = ((_changelist, _holder) => _holder.Set(_changelist.Date));
-                setters_[(int)Member.UserName]      = ((_changelist, _holder) => _holder.Set(_changelist.UserName));
-                setters_[(int)Member.Description]   = ((_changelist, _holder) => _holder.Set(_changelist.Description));
+                setters_ = new Action<ISegmentElement, IFieldHolder>[(int)Member.Max];
+                setters_[(int)Member.Revision]      = ((_changelist, _holder) => _holder.Set(((P4VChangelist)_changelist).Revision));
+                setters_[(int)Member.Date]          = ((_changelist, _holder) => _holder.Set(((P4VChangelist)_changelist).Date));
+                setters_[(int)Member.UserName]      = ((_changelist, _holder) => _holder.Set(((P4VChangelist)_changelist).UserName));
+                setters_[(int)Member.Description]   = ((_changelist, _holder) => _holder.Set(((P4VChangelist)_changelist).Description));
 
-                getters_ = new Func<P4VChangelist, IFieldHolder>[(int)Member.Max];
-                getters_[(int)Member.Revision]      = ((_changelist) => _changelist.RevisionHolder);
-                getters_[(int)Member.Date]          = ((_changelist) => _changelist.DateHolder);
-                getters_[(int)Member.UserName]      = ((_changelist) => _changelist.UserNameHolder);
-                getters_[(int)Member.Description]   = ((_changelist) => _changelist.DescriptionHolder);
+                getters_ = new Func<ISegmentElement, IFieldHolder>[(int)Member.Max];
+                getters_[(int)Member.Revision]      = ((_changelist) => ((P4VChangelist)_changelist).RevisionHolder);
+                getters_[(int)Member.Date]          = ((_changelist) => ((P4VChangelist)_changelist).DateHolder);
+                getters_[(int)Member.UserName]      = ((_changelist) => ((P4VChangelist)_changelist).UserNameHolder);
+                getters_[(int)Member.Description]   = ((_changelist) => ((P4VChangelist)_changelist).DescriptionHolder);
 
                 segTypes_ = new SegmentType[(int)Member.Max];
                 segTypes_[(int)Member.Revision]      = SegmentType.Changelist;
                 segTypes_[(int)Member.Date]          = SegmentType.Changelist;
                 segTypes_[(int)Member.UserName]      = SegmentType.Changelist;
                 segTypes_[(int)Member.Description]   = SegmentType.ChangelistByUser;
-            }
-
-            public Reflection() : base((int)Member.Max)
-            {
-
             }
         }
         

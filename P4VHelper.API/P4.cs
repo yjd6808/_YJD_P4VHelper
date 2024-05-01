@@ -11,36 +11,34 @@ namespace P4VHelper.API
         public const string CMD_CHANGES = "changes";
 
         private static readonly P4Instance s_P4 = new ();
-        private static readonly ThreadLocal<string> s_Path = new ();
+
+        public static bool IsConnected() => s_P4.IsConnected;
 
         public static Task ConnectAsync(string _uri, string _userName, string _workspace)
             => Task.Run(() => s_P4.Connect(_uri, _userName, _workspace));
 
-        public static void SetPath(string _path)
-            => s_Path.Value = _path;
-
-        public static Changelist GetLastChangelist()
+        public static Changelist GetLastChangelist(string _path)
         {
             ThrowIfNotConnected();
-            ThrowIfNotPathSet();
+            ThrowIfNotPathSet(_path);
 
             // p4 changes -s submitted -l -m 1 <path>
             Options options = new Options();
             options["-s"] = "submitted";        // status (submitted, pending, ...)
             options["-l"] = string.Empty;       // show description
             options["-m"] = "1";                // count
-            P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, s_Path.Value);
+            P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, _path);
             Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, cmdRet.TaggedOutput[0]);
             return changelist;
         }
 
-        public static Task<Changelist> GetLastChangelistAsync()
-            => Task.Run(GetLastChangelist);
+        public static Task<Changelist> GetLastChangelistAsync(string _path)
+            => Task.Run(() => GetLastChangelist(_path));
 
-        public static List<Changelist> GetChangelists(Range _rangeRev)
+        public static List<Changelist> GetChangelists(string _path, Range _rangeRev)
         {
             ThrowIfNotConnected();
-            ThrowIfNotPathSet();
+            ThrowIfNotPathSet(_path);
 
             int startRev = _rangeRev.Start.Value;
             int endRev = _rangeRev.End.Value;
@@ -52,7 +50,7 @@ namespace P4VHelper.API
             options["-s"] = "submitted";    // status (submitted, pending, ...)
             options["-l"] = string.Empty;   // show description
 
-            P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, $"{s_Path.Value}@{startRev},@{endRev}");
+            P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, $"{_path}@{startRev},@{endRev}");
             foreach (var taggedObject in cmdRet.TaggedOutput)
             {
                 Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, taggedObject);
@@ -61,13 +59,13 @@ namespace P4VHelper.API
             return changelists;
         }
 
-        public static Task<List<Changelist>> GetChangelistsAsync(Range _rangeRev)
-            => Task.Run(() => GetChangelists(_rangeRev));
+        public static Task<List<Changelist>> GetChangelistsAsync(string _path, Range _rangeRev)
+            => Task.Run(() => GetChangelists(_path, _rangeRev));
 
-        public static List<Changelist> GetChangelists(int _startRev, int _count)
+        public static List<Changelist> GetChangelists(string _path, int _startRev, int _count)
         {
             ThrowIfNotConnected();
-            ThrowIfNotPathSet();
+            ThrowIfNotPathSet(_path);
 
             // p4 changes -s submitted -l -m <count> <path>@<start>
             Options options = new Options();
@@ -77,7 +75,7 @@ namespace P4VHelper.API
             options["-l"] = string.Empty;   // show description
             options["-m"] = $"{_count}";    // count
 
-            P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, $"{s_Path}@{_startRev}");
+            P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, $"{_path}@{_startRev}");
             foreach (var taggedObject in cmdRet.TaggedOutput)
             {
                 Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, taggedObject);
@@ -87,8 +85,8 @@ namespace P4VHelper.API
             return changelists;
         }
 
-        public static Task<List<Changelist>> GetChangelistsAsync(int _startRev, int _count)
-            => Task.Run(() => GetChangelists(_startRev, _count));
+        public static Task<List<Changelist>> GetChangelistsAsync(string _path,int _startRev, int _count)
+            => Task.Run(() => GetChangelists(_path, _startRev, _count));
 
         private static void ThrowIfNotConnected()
         {
@@ -96,9 +94,9 @@ namespace P4VHelper.API
                 throw new Exception("연결 안됨");
         }
 
-        private static void ThrowIfNotPathSet()
+        private static void ThrowIfNotPathSet(string _path)
         {
-            if (string.IsNullOrEmpty(s_Path.Value))
+            if (string.IsNullOrEmpty(_path))
                 throw new Exception("히스토리 경로가 설정안됨");
         }
     }

@@ -12,7 +12,8 @@ using System.Threading.Tasks;
 using P4VHelper.Base;
 using P4VHelper.Base.Extension;
 using P4VHelper.Engine.Model;
-
+using Perforce.P4;
+using File = System.IO.File;
 using NativeChangelist = Perforce.P4.Changelist;
 
 namespace P4VHelper.Engine.Collection
@@ -37,7 +38,6 @@ namespace P4VHelper.Engine.Collection
             else if (_type == SegmentType.ChangelistByUser)
                 io = new Changelist();
 
-
             if (io == null) 
                 throw new Exception("알 수 없는 세그먼트 타입입니다.");
 
@@ -59,7 +59,11 @@ namespace P4VHelper.Engine.Collection
                 }
                 else
                 {
-                    if (_seg.State == SegmentState.Disk)
+                    if (_seg.State == SegmentState.None)
+                    {
+                        LoadFromServer(_seg);
+                    }
+                    else if (_seg.State == SegmentState.Disk)
                     {
                         if (!LoadFromFile(_seg))
                         {
@@ -81,7 +85,7 @@ namespace P4VHelper.Engine.Collection
                 SaveArgs.Changelist? args = _args as SaveArgs.Changelist;
                 bool forceServer = args?.ForceServer ?? false;
 
-                if (_seg.State == SegmentState.Disk)
+                if (_seg.State == SegmentState.Disk || _seg.State == SegmentState.None)
                 {
                     Load(_seg, new LoadArgs.Changelist() { ForceServer = forceServer });
                 }
@@ -97,10 +101,10 @@ namespace P4VHelper.Engine.Collection
                 BinaryWriter writer = new BinaryWriter(stream);
 
                 writer.Write(0);
-                writer.Write(_seg.List.Count);
-                for (int i = 0; i < _seg.List.Count; ++i)
+                writer.Write(_seg.Elements.Count);
+                for (int i = 0; i < _seg.Elements.Count; ++i)
                 {
-                    P4VChangelist elem = _seg.List[i] as P4VChangelist;
+                    P4VChangelist elem = _seg.Elements[i] as P4VChangelist;
                     elem.WriteTo(writer);
                 }
 
@@ -121,7 +125,7 @@ namespace P4VHelper.Engine.Collection
 
             public void LoadFromServer(Segment _seg)
             {
-                List<NativeChangelist> list = API.P4.GetChangelists(new Range(_seg.StartId, _seg.EndId));
+                List<NativeChangelist> list = API.P4.GetChangelists(_seg.Parent.Config.Path, new Range(_seg.StartId, _seg.EndId));
                 _seg.Clear();
                 for (int i = 0; i < list.Count; ++i)
                 {
@@ -143,9 +147,16 @@ namespace P4VHelper.Engine.Collection
                 int fileSize = (int)new FileInfo(path).Length;
                 byte[] bytes = ArrayPool<byte>.Shared.Rent(fileSize);
                 int readBytes = FileEx.ReadAllBytes(path, bytes);
+                uint checksum = Checksum.ChecksumAvx2(bytes, 4, fileSize - 4);
+
                 MemoryStream stream = new MemoryStream(bytes);
                 BinaryReader reader = new BinaryReader(stream);
                 _seg.Checksum = reader.ReadUInt32();
+
+                // 실제 체크섬과 기록된 체크섬이 다른 경우 실패
+                if (_seg.Checksum != checksum)
+                    return false;
+
                 int count = reader.ReadInt32();
 
                 for (int i = 0; i < count; ++i)

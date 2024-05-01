@@ -16,7 +16,7 @@ namespace P4VHelper.Model.TaskList
             Notifier.AddEach();
         }
 
-        public override string Name => "작업 없음";
+        public override string Description => "작업 없음";
         public override bool HasDetailView => false;
         public override void Execute()
         {

@@ -19,6 +19,8 @@ namespace P4VHelper.Base.Notifier
         private int isInterruptRequested_;
 
         public int Count => units_.Count;
+        public bool IsThreadSafe { get; set; }
+
         public bool IsInterruptRequested
         {
             get => InterlockedEx.Bool.Get(ref isInterruptRequested_);
@@ -78,7 +80,6 @@ namespace P4VHelper.Base.Notifier
         public void AddEach(int _reportElapsedMs = 50)
         {
             ProgressUnit unit = ProgressUnit.Factory.CreateEach(
-                this,
                 units_.Count,
                 TimeSpan.FromMilliseconds(_reportElapsedMs)
             );
@@ -89,7 +90,6 @@ namespace P4VHelper.Base.Notifier
         public void AddPercentUnit(float _percent = 2.0f, int _reportElapsedMs = 50)
         {
             ProgressUnit unit = ProgressUnit.Factory.CreatePercent(
-                this,
                 units_.Count,
                 _percent,
                 TimeSpan.FromMicroseconds(_reportElapsedMs)
@@ -110,12 +110,43 @@ namespace P4VHelper.Base.Notifier
                 units_[i].Start(_maxs[i]);
         }
 
-        public void Progress(int _slot = 0, int _count = 1)
+        public ProgressState Progress() => Progress(0, 1);
+        public ProgressState Progress(int _slot) => Progress(_slot, 1);
+        public ProgressState Progress(int _slot, int _count)
+        {
+            if (IsThreadSafe)
+            {
+                lock (this)
+                {
+                    return __Progress(_slot, _count);
+                }
+            }
+
+            return __Progress(_slot, _count);
+        }
+
+        private ProgressState __Progress(int _slot, int _count)
         {
             if (IsInterruptRequested)
                 throw new InterruptException();
 
-            units_[_slot].Progress(_count);
+            ProgressState state = ProgressState.None;
+            ProgressUnit unit = units_[_slot];
+            if (unit == null)
+                return state;
+
+            bool reported = unit.Progress(_count);
+
+            if (unit.IsFinished)
+                state |= ProgressState.Finished;
+
+            if (reported)
+            {
+                state |= ProgressState.Reported;
+                Report(_slot);
+            }
+
+            return state;
         }
 
         public void Report(int _slot)
@@ -123,7 +154,6 @@ namespace P4VHelper.Base.Notifier
             ProgressUnit unit = units_[_slot];
             Debug.Assert(unit.Cur <= unit.Max);
             listener_._OnReported(_slot);
-            unit.Notified = unit.Cur;
 
             // if (_cur == _max)
             // _listener._OnFinished();

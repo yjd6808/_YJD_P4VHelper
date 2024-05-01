@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using P4VHelper.Base;
 using P4VHelper.Base.Extension;
 using P4VHelper.Engine.Collection;
+using Perforce.P4;
 
 namespace P4VHelper.Engine.Model
 {
@@ -34,17 +35,24 @@ namespace P4VHelper.Engine.Model
 
             private string path_ = string.Empty;
             private string alias_ = string.Empty;
+            private SegmentGroup link_;
 
             public SegmentType Type { get; set; } = SegmentType.Max;
-            public SegmentGroup? Ref { get; set; }
+            public SegmentType RealType => HasLink ? Link.RealType : Type;
+
+            public SegmentGroup Link
+            {
+                get => link_ == this ? this : link_.Link;
+                set => link_ = value;
+            }
 
             public string Path
             {
-                get => IsRef ? Ref.Path : path_;
+                get => HasLink ? Link.Path : path_;
                 set
                 {
-                    if (IsRef) 
-                        throw new Exception("레프 세그먼트 컨피그는 패쓰설정이 불가능함");
+                    if (HasLink) 
+                        throw new Exception("링크 세그먼트 컨피그는 패쓰설정이 불가능함");
 
                     path_ = value;
                 }
@@ -52,21 +60,27 @@ namespace P4VHelper.Engine.Model
 
             public string Alias
             {
-                get => IsRef ? Ref.Path : path_;
+                get => HasLink ? Link.Alias : alias_;
                 set
                 {
-                    if (IsRef)
-                        throw new Exception("레프 세그먼트 컨피그는 얼라이어스설정이 불가능함");
+                    if (HasLink)
+                        throw new Exception("링크 세그먼트 컨피그는 얼라이어스설정이 불가능함");
                     alias_ = value;
                 }
             }
 
             public int Id { get; set; }
             public int CachedSegmentCount { get; set; } = 10;
+            public int SegmentSize { get; set; } = 5000;
             public List<Filter> Filters { get; set; } = new();
             public Regex? Regex { get; set; }
 
-            public bool IsRef => Ref != null;
+            public bool HasLink => Link != this;
+
+            public SegmentGroup()
+            {
+                Link = this;
+            }
 
             public void ConstructRegex()
             {
@@ -130,7 +144,6 @@ namespace P4VHelper.Engine.Model
         public string UserName { get; set; } = string.Empty;
         public string Workspace { get; set; } = string.Empty;
         public int ReadDelay { get; set; } = 500;
-        public int SegmentSize { get; set; } = 5000;
         public int RefreshSegmentCount { get; set; } = 1;
 
         /// <summary>
@@ -171,7 +184,7 @@ namespace P4VHelper.Engine.Model
             Count++;
         }
 
-        public SegmentGroup GetSegmentGroupById(int _id)
+        public SegmentGroup GetGroupById(int _id)
         {
             if (_id >= Count)
                 throw new Exception($"{_id}은 올바른 세그먼트 그룹 인덱스가 아닙니다.");
@@ -182,7 +195,7 @@ namespace P4VHelper.Engine.Model
             return segMap_[_id];
         }
 
-        public SegmentGroup GetSegmentGroup(SegmentType _type, string _alias)
+        public SegmentGroup GetGroup(SegmentType _type, string _alias)
         {
             for (int i = 0; i < Count; ++i)
             {
@@ -191,6 +204,31 @@ namespace P4VHelper.Engine.Model
             }
 
             throw new Exception($"{_type}/{_alias} 해당하는 세그먼트 그룹을 찾을 수 없습니다");
+        }
+
+        public SegmentGroup GetRealGroup(string _alias)
+        {
+            for (int i = 0; i < Count; ++i)
+            {
+                if (segMap_[i].Alias == _alias)
+                    return segMap_[i].Link;
+            }
+
+            throw new Exception($"{_alias} 해당하는 세그먼트 그룹을 찾을 수 없습니다");
+        }
+
+        public List<SegmentGroup> GetAliasGroup(string _alias)
+        {
+            List<SegmentGroup> groups = new List<SegmentGroup>(Count);
+
+            for (int i = 0; i < Count; ++i)
+            {
+                SegmentGroup group = segMap_[i];
+                if (group.Alias == _alias)
+                    groups.Add(group);
+
+            }
+            return groups;
         }
 
         public void Validate()
@@ -204,7 +242,6 @@ namespace P4VHelper.Engine.Model
             Workspace = _config.Workspace;
             ReadDelay = _config.ReadDelay;
             RefreshSegmentCount = _config.RefreshSegmentCount;
-            SegmentSize = _config.SegmentSize;
 
             segMap_ = new SegmentGroup[30];
 

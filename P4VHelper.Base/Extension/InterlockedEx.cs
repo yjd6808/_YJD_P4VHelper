@@ -35,6 +35,28 @@ namespace P4VHelper.Base.Extension
             {
                 return Interlocked.Add(ref _target, _value);
             }
+
+            public static int Cas(ref int _target, int _comparand, int _value)
+            {
+                return Interlocked.CompareExchange(ref _target, _value, _comparand);
+            }
+
+            public static bool GCas(ref int _target, int _comparand, int _value)
+            {
+                for (;;)
+                {
+                    int old = Get(ref _target);
+                    if (old > _comparand)
+                    {
+                        if (Cas(ref _target, _comparand, _value) == old)
+                            return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
         }
 
         public static class Bool
@@ -50,6 +72,14 @@ namespace P4VHelper.Base.Extension
                     return Interlocked.CompareExchange(ref _target, 1, 0);
 
                 return Interlocked.CompareExchange(ref _target, 0, 1);
+            }
+
+            public static bool Cas(ref int _target, bool _comparand, bool _value)
+            {
+                int comparand = _comparand ? 1 : 0;
+                int value = _value ? 1 : 0;
+                int result = Interlocked.CompareExchange(ref _target, value, comparand);
+                return Convert.ToBoolean(result);
             }
         }
     }

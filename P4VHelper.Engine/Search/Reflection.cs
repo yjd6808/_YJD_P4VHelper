@@ -12,12 +12,13 @@ namespace P4VHelper.Engine.Search
     public interface IReflection
     {
         public SegmentType GetSegType(int _member);
+        public IFieldHolder GetField(ISegmentElement _segElem, int _member);
     }
 
     public abstract class Reflection<T> : IReflection where T : ISegmentElement
     {
-        public Action<T, IFieldHolder>[] setters_;
-        public Func<T, IFieldHolder>[] getters_;
+        public Action<ISegmentElement, IFieldHolder>[] setters_;
+        public Func<ISegmentElement, IFieldHolder>[] getters_;
         public SegmentType[] segTypes_;
 
         public int maxKey_;
@@ -30,7 +31,7 @@ namespace P4VHelper.Engine.Search
         /// <summary>
         /// T 객체의 _member에 해당하는 멤버변수를 가져온다
         /// </summary>
-        public IFieldHolder GetField(T _segElem, int _member)
+        public IFieldHolder GetField(ISegmentElement _segElem, int _member)
         {
             if (_member < 0 || _member >= maxKey_ )
                 throw new ArgumentOutOfRangeException();
@@ -60,11 +61,6 @@ namespace P4VHelper.Engine.Search
         {
             reflections_ = new IReflection[(int)SegmentType.Max];
             reflections_[0] = new P4VChangelist.Reflection();
-        }
-
-        public static Reflection<T> Get<T>(T _elem) where T : ISegmentElement
-        {
-            return (Reflection<T>)reflections_[(int)_elem.Type];
         }
 
         public static IReflection Get(SegmentType _type)
