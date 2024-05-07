@@ -17,6 +17,8 @@ namespace P4VHelper.Model
     {
         private readonly P4VConfig p4_ = new ();
         private XDocument xDoc_ = new ();
+        private int searchLimit_ = 10000;     // 검색시 최대 몇개의 아이템을 저장할지
+        private int scrollLimit_ = 100;       // 한번 스크롤에 최대 몇개의 아이템을 가져올 지
 
         public P4VConfig P4VConfig => p4_;
 
@@ -46,6 +48,26 @@ namespace P4VHelper.Model
             set
             {
                 p4_.Workspace = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int SearchLimit
+        {
+            get => searchLimit_;
+            set
+            {
+                searchLimit_ = value; 
+                OnPropertyChanged();
+            }
+        }
+
+        public int ScrollLimit
+        {
+            get => scrollLimit_;
+            set
+            {
+                scrollLimit_ = value;
                 OnPropertyChanged();
             }
         }

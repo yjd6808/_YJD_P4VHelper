@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using Gma.DataStructures.StringSearch;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,25 +21,31 @@ using P4VHelper.Engine.Search;
 using P4VHelper.Model.TaskList;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Windows.Threading;
 using P4VHelper.API;
 using P4VHelper.Base;
 using P4VHelper.Engine.Collection;
 using P4VHelper.Engine.Param;
 using P4VHelper.Extension;
 using P4VHelper.Model;
-using StackPanel = System.Windows.Controls.StackPanel;
 
 namespace P4VHelper.View
 {
     public partial class MainView : Window
     {
         public MainViewModel ViewModel { get; }
+        public DispatcherTimer Timer { get; }
 
         public MainView()
         {
             ViewModel = new MainViewModel(this);
 
             InitializeComponent();
+
+            Timer = new DispatcherTimer();
+            Timer.Tick += HistoryTabTimer;
+            Timer.Interval = TimeSpan.FromMilliseconds(100);
+            Timer.Start();
         }
 
         private async void OnLoaded(object _sender, RoutedEventArgs _e)
@@ -123,5 +128,7 @@ namespace P4VHelper.View
                 ViewModel.TaskMgr.Run(new Load(param));
             }
         }
+
+        
     }
 }

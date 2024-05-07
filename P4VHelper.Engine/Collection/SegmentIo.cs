@@ -25,8 +25,8 @@ namespace P4VHelper.Engine.Collection
         public SegmentGroup Group { get; private set; }
         public string GetFilePath(Segment _seg) => $"{_seg.Parent.DirPath}/{_seg.Id}{FileExtensionName}";
 
-        public abstract void Load(Segment _seg, LoadArgs? _args);
-        public abstract void Save(Segment _seg, SaveArgs? _args);
+        public abstract bool Load(Segment _seg, LoadArgs? _args);
+        public abstract bool Save(Segment _seg, SaveArgs? _args);
 
         public void SetGroup(SegmentGroup _group) => Group = _group;
 
@@ -48,37 +48,41 @@ namespace P4VHelper.Engine.Collection
         public class Changelist : SegmentIo
         {
             public override string FileExtensionName => ".bin";
-            public override void Load(Segment _seg, LoadArgs? _args)
+            public override bool Load(Segment _seg, LoadArgs? _args)
             {
                 LoadArgs.Changelist? args = _args as LoadArgs.Changelist;
                 bool forceServer = args?.ForceServer ?? false;
+                bool loaded;
 
                 if (forceServer)
                 {
-                    LoadFromServer(_seg);
+                    loaded = LoadFromServer(_seg);
                 }
                 else
                 {
                     if (_seg.State == SegmentState.None)
                     {
-                        LoadFromServer(_seg);
+                        loaded = LoadFromServer(_seg);
                     }
                     else if (_seg.State == SegmentState.Disk)
                     {
-                        if (!LoadFromFile(_seg))
+                        loaded = LoadFromFile(_seg);
+                        if (!loaded)
                         {
-                            LoadFromServer(_seg);
+                            loaded = LoadFromServer(_seg);
                         }
                     }
                     else
                     {
                         // 이미 메모리에 올라와있는 경우에는 서버에서 로딩
-                        LoadFromServer(_seg);
+                        loaded = LoadFromServer(_seg);
                     }
                 }
+
+                return loaded;
             }
 
-            public override void Save(Segment _seg, SaveArgs? _args)
+            public override bool Save(Segment _seg, SaveArgs? _args)
             {
                 string path = GetFilePath(_seg);
                 string dir = _seg.Parent.DirPath;
@@ -87,7 +91,11 @@ namespace P4VHelper.Engine.Collection
 
                 if (_seg.State == SegmentState.Disk || _seg.State == SegmentState.None)
                 {
-                    Load(_seg, new LoadArgs.Changelist() { ForceServer = forceServer });
+                    // 로딩 실패한 경우...
+                    if (Load(_seg, new LoadArgs.Changelist() { ForceServer = forceServer }) == false)
+                    {
+                        return false;
+                    }
                 }
 
                 if (!Directory.Exists(dir))
@@ -121,9 +129,11 @@ namespace P4VHelper.Engine.Collection
                 {
                     _seg.Clear();
                 }
+
+                return true;
             }
 
-            public void LoadFromServer(Segment _seg)
+            public bool LoadFromServer(Segment _seg)
             {
                 List<NativeChangelist> list = API.P4.GetChangelists(_seg.Parent.Config.Path, new Range(_seg.StartId, _seg.EndId));
                 _seg.Clear();
@@ -136,6 +146,7 @@ namespace P4VHelper.Engine.Collection
                     P4VChangelist changelistMain = new P4VChangelist(native);
                     _seg.Add(changelistMain);
                 }
+                return _seg.Count > 0;
             }
 
             public bool LoadFromFile(Segment _seg)
@@ -173,12 +184,12 @@ namespace P4VHelper.Engine.Collection
         public class ChangelistByUser : SegmentIo
         {
             public override string FileExtensionName => ".bin";
-            public override void Load(Segment _seg, LoadArgs? _args)
+            public override bool Load(Segment _seg, LoadArgs? _args)
             {
                 throw new NotImplementedException();
             }
 
-            public override void Save(Segment _seg, SaveArgs? _args)
+            public override bool Save(Segment _seg, SaveArgs? _args)
             {
                 throw new NotImplementedException();
             }

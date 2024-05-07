@@ -1,6 +1,7 @@
 ﻿// jdyun 24/04/07(일)
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -54,6 +55,40 @@ namespace P4VHelper.Base.Extension
                 node = next;
             }
             return count;
+        }
+
+        public static int AddRange<T>(this List<T> _list, List<T> _otherList, int offset, int count)
+        {
+            if (_otherList == null)
+            {
+                Debug.Assert(false);
+                return 0;
+            }
+
+            if (count <= 0)
+            {
+                Debug.Assert(false);
+                return 0;
+            }
+
+            if (offset >= _otherList.Count)
+            {
+                Debug.Assert(false);
+                return 0;
+            }
+
+            int copyCount = 0;
+
+            for (int i = offset; i < _otherList.Count; ++i)
+            {
+                _list.Add(_otherList[i]);
+                copyCount++;
+
+                if (copyCount >= count)
+                    break;
+            }
+
+            return copyCount;
         }
     }
 }

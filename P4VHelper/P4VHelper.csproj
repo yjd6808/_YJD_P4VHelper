@@ -71,10 +71,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="TrieNet.Core" Version="1.0.4" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\P4VHelper.Base\P4VHelper.Base.csproj" />
     <ProjectReference Include="..\P4VHelper.Engine\P4VHelper.Engine.csproj" />
   </ItemGroup>

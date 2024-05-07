@@ -28,7 +28,7 @@ namespace P4VHelper.ViewModel
         public P4VEngine Engine { get; }
         public Configuration Config { get; }
         public SearchState SearchState { get; }
-        public WpfObservableRangeCollection<P4VChangelist> HistorySearchResult { get; } = new ();
+        public SearchResult<P4VChangelist> HistorySearchResult { get; }
         public bool IsLoaded { get; private set; }              // 로딩시 설정됨
         public string TabName { get; set; } = string.Empty;     // 탭 변경시 설정됨
 
@@ -40,30 +40,7 @@ namespace P4VHelper.ViewModel
             Config = Configuration.Load();
             Engine = new P4VEngine(Config.P4VConfig);
             SearchState = new SearchState();
-
-            //HistorySearchResult.Add(new P4VChangelist()
-            //{
-            //    Date = DateTime.Now,
-            //    Description = "esfesf",
-            //    Revision = 5050,
-            //    UserName = "jdyun"
-            //});
-
-            //HistorySearchResult.Add(new P4VChangelist()
-            //{
-            //    Date = DateTime.Now,
-            //    Description = "esfesf",
-            //    Revision = 5049,
-            //    UserName = "jdyun"
-            //});
-
-            //HistorySearchResult.Add(new P4VChangelist()
-            //{
-            //    Date = DateTime.Now + TimeSpan.FromDays(1),
-            //    Description = "esfesf",
-            //    Revision = 5047,
-            //    UserName = "jdyun"
-            //});
+            HistorySearchResult = new SearchResult<P4VChangelist>(this);
         }
 
         public async Task Loaded()

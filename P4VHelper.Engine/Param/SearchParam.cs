@@ -23,7 +23,7 @@ namespace P4VHelper.Engine.Param
         public SearchResult(int _slotCount)
         {
             // hash collsion을 줄일려면 쓰레드수는 슬롯수보다 작아야한다.
-            Debug.Assert(SearchParam.s_ThreadCount < SearchParam.s_SlotCount);
+            Debug.Assert(SearchParam.ThreadCount < SearchParam.SlotCount);
             Slot = ArrayEx.Create(_slotCount, () => new List<ISegmentElement>());
             IsSlotUse = new int[_slotCount];
             SlotCount = _slotCount;
@@ -49,12 +49,15 @@ namespace P4VHelper.Engine.Param
 
     public class SearchParam
     {
-        public static int s_SlotCount = 8;
-        public static int s_ThreadCount = 4;
+        // 이 변수들은 처음 프로그램 로딩시에만 변경 가능하도록 한다.
+        // 옵션에서 해당 수치를 변경하고자 설정한 경우 프로그램을 껏다가 켠 경우 반영되도록 해야함
+        // P4VHelper.Model.SearchResult<T>에서 참조하여 사용한다.
+        public static int SlotCount = 8;
+        public static int ThreadCount = 4;
 
         public SearchParam()
         {
-            Result = new SearchResult(s_SlotCount);
+            Result = new SearchResult(SlotCount);
             Alias = string.Empty;
             Rule = Rule.Max;
             Notifier = null;
@@ -95,11 +98,12 @@ namespace P4VHelper.Engine.Param
         public void NotifySlot(int _slot)
         {
             // 무조건 크리티컬 섹션이어야함
-            List<ISegmentElement> elements = Result.Slot[_slot];
+            ref List<ISegmentElement> elements = ref Result.Slot[_slot];
 
             if (elements.Count > 0)
             {
                 Handler?.Invoke(ref elements, this);
+                elements = new List<ISegmentElement>(64);
             }
         }
 

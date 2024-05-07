@@ -28,6 +28,10 @@ namespace P4VHelper.API
             options["-l"] = string.Empty;       // show description
             options["-m"] = "1";                // count
             P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, _path);
+
+            if (cmdRet.TaggedOutput == null)
+                return null;
+
             Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, cmdRet.TaggedOutput[0]);
             return changelist;
         }
@@ -51,11 +55,16 @@ namespace P4VHelper.API
             options["-l"] = string.Empty;   // show description
 
             P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, $"{_path}@{startRev},@{endRev}");
-            foreach (var taggedObject in cmdRet.TaggedOutput)
+
+            if (cmdRet.TaggedOutput != null && cmdRet.TaggedOutput.Count > 0)
             {
-                Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, taggedObject);
-                changelists.Add(changelist);
+                foreach (var taggedObject in cmdRet.TaggedOutput)
+                {
+                    Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, taggedObject);
+                    changelists.Add(changelist);
+                }
             }
+            
             return changelists;
         }
 
@@ -76,10 +85,14 @@ namespace P4VHelper.API
             options["-m"] = $"{_count}";    // count
 
             P4CommandResult cmdRet = s_P4.Run(CMD_CHANGES, options, $"{_path}@{_startRev}");
-            foreach (var taggedObject in cmdRet.TaggedOutput)
+
+            if (cmdRet.TaggedOutput != null && cmdRet.TaggedOutput.Count > 0)
             {
-                Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, taggedObject);
-                changelists.Add(changelist);
+                foreach (var taggedObject in cmdRet.TaggedOutput)
+                {
+                    Changelist changelist = P4Instance.CreateChangelistFromTaggedObject(s_P4, taggedObject);
+                    changelists.Add(changelist);
+                }
             }
 
             return changelists;

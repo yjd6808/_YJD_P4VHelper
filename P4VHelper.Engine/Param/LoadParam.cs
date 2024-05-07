@@ -26,5 +26,13 @@ namespace P4VHelper.Engine.Param
             if (string.IsNullOrEmpty(Alias))
                 throw new Exception("SeachParam.Alias 설정안됨");
         }
+
+        public void NotifyException(Segment _seg, Exception _e)
+        {
+            Handler?.Invoke(_seg, _e);
+        }
+
+        public delegate void ExceptionHandler(Segment _seg, Exception _e);
+        public event ExceptionHandler Handler;
     }
 }

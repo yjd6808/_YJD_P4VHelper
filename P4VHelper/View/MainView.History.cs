@@ -10,11 +10,22 @@ using P4VHelper.Engine.Search;
 using P4VHelper.Engine.Collection;
 using P4VHelper.Engine.Param;
 using P4VHelper.Model.TaskList;
+using System.Windows.Controls.Primitives;
+using P4VHelper.Extension;
+using P4VHelper.Model;
+using System.Data.Common;
+using System.Reflection;
+using System;
+using P4VHelper.Customize.Control;
 
 namespace P4VHelper.View
 {
     public partial class MainView : Window
     {
+        private void HistoryTabTimer(object? _sender, EventArgs _e)
+        {
+        }
+
         private void HistorySearchTextBox_OnPreviewTextInput(object _sender, TextCompositionEventArgs _e)
         {
             var member = (P4VChangelist.Member)ViewModel.SearchState.Member;
@@ -88,6 +99,76 @@ namespace P4VHelper.View
                 return;
         }
 
-        
+        private void HistorySearchResultDataGrid_OnScrollChanged(object _sender, ScrollChangedEventArgs _e)
+        {
+            ScrollViewer scrollViewer = HistorySearchResultDataGrid.GetScrollViewer();
+            if (scrollViewer == null)
+            {
+                Debug.Assert(false);
+                return;
+            }
+
+            ScrollBar scrollBar = scrollViewer.GetScrollBar();
+            if (scrollBar == null)
+            {
+                Debug.Assert(false);
+                return;
+            }
+
+            #region DEBUG PRINT
+            Debug.WriteLine($"{nameof(_e.ExtentHeight)}: {_e.ExtentHeight}");
+            Debug.WriteLine($"{nameof(_e.ExtentHeightChange)}: {_e.ExtentHeightChange}");
+            Debug.WriteLine($"{nameof(_e.ViewportHeight)}: {_e.ViewportHeight}");
+            Debug.WriteLine($"{nameof(_e.ViewportHeightChange)}: {_e.ViewportHeightChange}");
+            Debug.WriteLine($"{nameof(_e.VerticalOffset)}: {_e.VerticalOffset}");
+            Debug.WriteLine($"{nameof(_e.VerticalChange)}: {_e.VerticalChange}");
+            #endregion
+
+            if (_e.VerticalChange == 0)
+                return;
+
+            // 위로 간 경우
+            if (_e.VerticalChange < 0)
+                return;
+
+            P4VChangelist lastChangelist = LastChangelist();
+
+            if (lastChangelist == null)
+            {
+                Debug.Assert(false);
+                return;
+            }
+        }
+
+        public P4VChangelist LastChangelist()
+        {
+            return HistorySearchResultDataGrid.Items[^1] as P4VChangelist;
+        }
+
+        public List<P4VChangelist> SelectedChangelists()
+        {
+            return HistorySearchResultDataGrid.SelectedItems.Cast<P4VChangelist>().ToList();
+        }
+
+        public P4VChangelist SelectedChangelist()
+        {
+            return HistorySearchResultDataGrid.SelectedItem as P4VChangelist;
+        }
+
+        // 키다운은 터널링해야 인식함;
+        private void HistorySearchResultDataGrid_OnPreviewKeyDown(object _sender, KeyEventArgs _e)
+        {
+            if (_e.Key != Key.Down && _e.Key != Key.PageDown)
+                return;
+
+            // 디텍트 스크롤바 끝자락
+            // @참고: https://stackoverflow.com/questions/1301411/detect-when-wpf-listview-scrollbar-is-at-the-bottom
+            if (HistorySearchResultDataGrid.IsScrollEnd && LastChangelist() == HistorySearchResultDataGrid.SelectedItem)
+            {
+                ViewModel.HistorySearchResult.ViewMoreItems(ViewModel.Config.ScrollLimit, false);
+                HistorySearchResultDataGrid.Focus();
+                _e.Handled = true;
+            }
+        }
     }
 }

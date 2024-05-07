@@ -14,7 +14,7 @@
         xmlns:r="clr-namespace:P4VHelper.Resource"
         mc:Ignorable="d"
         Title="MainWindow"
-        Height="800"
+        Height="805"
         Width="800"
         Name="MainWindow"
         AllowsTransparency="True"
@@ -32,7 +32,7 @@
                       ResizeBorderThickness="5" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
-        
+
         <!--
         Enum을 일부 필드는 제외하고 ItemsSource에 바인딩하는 방법
         @출처: https://stackoverflow.com/questions/4306743/wpf-data-binding-how-to-data-bind-an-enum-to-combo-box-using-xaml
@@ -162,7 +162,7 @@
                                       SelectedIndex="0">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Alias}"/>
+                                        <TextBlock Text="{Binding Alias}" />
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
@@ -204,7 +204,7 @@
                             <Grid.Resources>
                                 <!-- 히스토리/테이블/뷰소스-->
                                 <CollectionViewSource x:Key="ChangelistViewSource"
-                                                      Source="{Binding ViewModel.HistorySearchResult}">
+                                                      Source="{Binding ViewModel.HistorySearchResult.ViewList}">
                                     <CollectionViewSource.SortDescriptions>
                                         <scm:SortDescription PropertyName="Revision"
                                                              Direction="Descending" />
@@ -212,20 +212,20 @@
                                 </CollectionViewSource>
                             </Grid.Resources>
 
-                            <!--<DataGrid ItemsSource="{Binding ViewModel.HistorySearchResult}"-->
-                            
-                            <DataGrid ItemsSource="{Binding Source={StaticResource ChangelistViewSource}}"
-                            
-                                Name="HistorySearchResultDataGrid"
-                                      IsReadOnly="True"
-                                      AutoGenerateColumns="False"
-                                      VirtualizingPanel.IsVirtualizingWhenGrouping="True"
-                                      VirtualizingPanel.VirtualizationMode="Standard"
-                                      VirtualizingPanel.IsVirtualizing="True"
-                                      GridLinesVisibility="None">
+                            <!--<DataGrid ItemsSource="{Binding Source={StaticResource ChangelistViewSource}}"-->
+                            <uc:JDataGrid ItemsSource="{Binding ViewModel.HistorySearchResult.ViewList}"
+                                          ScrollViewer.ScrollChanged="HistorySearchResultDataGrid_OnScrollChanged"
+                                          x:Name="HistorySearchResultDataGrid"
+                                          PreviewKeyDown="HistorySearchResultDataGrid_OnPreviewKeyDown"
+                                          IsReadOnly="True"
+                                          AutoGenerateColumns="False"
+                                          VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                          VirtualizingPanel.VirtualizationMode="Standard"
+                                          VirtualizingPanel.IsVirtualizing="True"
+                                          GridLinesVisibility="None">
 
                                 <!-- 히스토리/테이블/컬럼-->
-                                <DataGrid.Columns>
+                                <uc:JDataGrid.Columns>
                                     <DataGridTextColumn Header="Revision"
                                                         Width="50"
                                                         Binding="{Binding Revision}" />
@@ -238,8 +238,8 @@
                                     <DataGridTextColumn Header="Description"
                                                         Width="*"
                                                         Binding="{Binding Description}" />
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                </uc:JDataGrid.Columns>
+                            </uc:JDataGrid>
                         </Grid>
                     </Grid>
                 </TabItem>
@@ -292,7 +292,7 @@
                         </Grid>
 
                     </Grid>-->
-                    
+
                     <StackPanel Grid.Column="1"
                                 ToolTip="실행중이거나 실행 대기중인 작업 수"
                                 Orientation="Horizontal"

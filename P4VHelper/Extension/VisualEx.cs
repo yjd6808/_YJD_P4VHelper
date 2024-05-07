@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -175,5 +176,36 @@ namespace P4VHelper.Extension
             // Kill keyboard focus
             Keyboard.ClearFocus();
         }
+
+
+        // UIElement로부터 스크롤뷰어 얻기
+        // @참고: https://stackoverflow.com/questions/41132649/get-datagrids-scrollviewer
+        public static ScrollViewer GetScrollViewer(this UIElement _element)
+        {
+            if (_element == null) 
+                return null;
+
+            ScrollViewer retour = null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(_element) && retour == null; i++)
+            {
+                if (VisualTreeHelper.GetChild(_element, i) is ScrollViewer)
+                {
+                    retour = (ScrollViewer)(VisualTreeHelper.GetChild(_element, i));
+                }
+                else
+                {
+                    retour = GetScrollViewer(VisualTreeHelper.GetChild(_element, i) as UIElement);
+                }
+            }
+            return retour;
+        }
+
+        // 스크롤뷰어로부터 스크롤바 얻기
+        // @참고: https://stackoverflow.com/questions/7164439/wpf-how-to-extract-scrollbar-from-scrollviewer-programmatically
+        public static ScrollBar GetScrollBar(this ScrollViewer _element)
+        {
+            return _element.Template.FindName("PART_VerticalScrollBar", _element) as ScrollBar;
+        }
+        
     }
 }

@@ -55,7 +55,25 @@ namespace P4VHelper.Engine.Collection
             }
         }
 
+        // 최신 체인지리스트
         public async Task<NativeChangelist> UpdateAndGetLastChangeList()
+        {
+            NativeChangelist changelist;
+            if (timeCache_.Elapsed(Id))
+            {
+                changelist = await API.P4.GetLastChangelistAsync(Config.Path);
+                timeCache_.Set(Id, changelist);
+            }
+            else
+            {
+                changelist = timeCache_.Get<NativeChangelist>(Id);
+            }
+
+            return changelist;
+        }
+
+        // 과거 체인지리스트
+        public async Task<NativeChangelist> UpdateAndGetFirstChangeList()
         {
             NativeChangelist changelist;
             if (timeCache_.Elapsed(Id))
@@ -94,8 +112,6 @@ namespace P4VHelper.Engine.Collection
             }
 
             int loadCount = _param.LoadCount;
-
-
             int availableLoadCount = loadCount > totalSegmentCount ? totalSegmentCount : totalSegmentCount - loadCount;
 
             int startSegmentId = totalSegmentCount - 1;
@@ -104,7 +120,6 @@ namespace P4VHelper.Engine.Collection
             int leftSaveCount = _param.Save ? availableLoadCount : 0;
             int leftCacheCount = loadCount < Config.CachedSegmentCount ? loadCount : Config.CachedSegmentCount;
 
-            int curLoadedCount = 0;
             int curCachedSegmentCount = 0;
 
             _param.Notifier.Start(leftSaveCount + leftCacheCount);
@@ -117,21 +132,25 @@ namespace P4VHelper.Engine.Collection
                     throw new Exception($"{segId} 세그먼트가 존재하지 않습니다");
 
                 seg.Ready(Config.SegmentSize);
-
-                if (curCachedSegmentCount < Config.CachedSegmentCount)
+                try
                 {
-                    seg.Load(_param.LoadArgs);
-                    _param.Notifier.Progress();
-                    curCachedSegmentCount++;
-                }
+                    if (curCachedSegmentCount < Config.CachedSegmentCount)
+                    {
+                        seg.Load(_param.LoadArgs);
+                        _param.Notifier.Progress();
+                        curCachedSegmentCount++;
+                    }
 
-                if (_param.Save)
+                    if (_param.Save)
+                    {
+                        seg.Save(_param.SaveArgs);
+                        _param.Notifier.Progress();
+                    }
+                }
+                catch (Exception e)
                 {
-                    seg.Save(_param.SaveArgs);
-                    _param.Notifier.Progress();
+                    _param.NotifyException(seg, e);
                 }
-
-                curLoadedCount++;
             }
         }
 

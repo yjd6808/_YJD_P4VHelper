@@ -87,7 +87,6 @@ namespace P4VHelper.Engine.Collection
                 if (elements_ != null)
                 {
                     elements_.Clear();
-                    state_ = SegmentState.Disk;
                 }
             }
         }
@@ -112,8 +111,11 @@ namespace P4VHelper.Engine.Collection
             lock (this)
             {
                 ThrowIfNotReady();
-                Parent.Io.Load(this, _args);
-                state_ = SegmentState.Memory;
+
+                if (Parent.Io.Load(this, _args))
+                {
+                    state_ = SegmentState.Memory;
+                }
             }
         }
 

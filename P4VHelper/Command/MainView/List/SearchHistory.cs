@@ -26,36 +26,21 @@ namespace P4VHelper.Command.MainView.List
                 throw new Exception("서치 스테이트가 유효하지 않습니다.");
 
             SearchParam param = new SearchParam();
-            param.Limit = 500;
+            param.Limit = ViewModel.Config.SearchLimit;
             param.Input = _text;
             param.Rule = ViewModel.SearchState.Rule;
             param.Alias = ViewModel.SearchState.Alias;
             param.Member = ViewModel.SearchState.Member;
             param.Handler += OnSegmentSearched;
+            ViewModel.HistorySearchResult.Param = param;
             ViewModel.TaskMgr.Run(new Search(param, ViewModel.TabName), _removeSameClass: true);
         }
 
         private void OnSegmentSearched(ref List<ISegmentElement> _result, SearchParam _param)
         {
             List<ISegmentElement> refCopy = _result;
-
-            // double check (BeginInvoke(비동기)로 안하면 한번만 체크해도댐)
-            // 만약 double check를 안하고 비동기로 처리해버리면 background task가 interrupt가 되고나서
-            // 아이템이 추가되는 괴이한 현상이 발생할 수 있음
-            if (!_param.Notifier.IsInterruptRequested)
-            {
-                ViewModel.View.Dispatcher.BeginInvoke(() =>
-                {
-                    if (_param.Notifier.IsInterruptRequested)
-                        return;
-
-                    IEnumerable<P4VChangelist> changelists = refCopy.OfType<P4VChangelist>();
-                    ViewModel.HistorySearchResult.AddRange(changelists);
-                });
-            }
-
-            // 다른 리스트를 참조하도록 해놔야함.
-            _result = new List<ISegmentElement>(64);
+            List<P4VChangelist> changelists = refCopy.OfType<P4VChangelist>().ToList(); // TODO: 캐스팅 제거
+            ViewModel.HistorySearchResult.Add(changelists);
         }
     }
 }
