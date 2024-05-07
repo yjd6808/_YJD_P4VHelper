@@ -11,6 +11,38 @@ namespace P4VHelper.Base
 {
     public static class Checksum
     {
+        public static uint ChecksumJunior(byte[] _bytes, int _offset)
+        {
+            return ChecksumJunior(new ReadOnlySpan<byte>(_bytes, _offset, _bytes.Length));
+        }
+
+        public static uint ChecksumJunior(byte[] _bytes, int _offset, int _count)
+        {
+            return ChecksumJunior(new ReadOnlySpan<byte>(_bytes, _offset, _count));
+        }
+
+        public static uint ChecksumJunior(ReadOnlySpan<byte> _arr)
+        {
+            if (_arr.Length == 0) return 0;
+
+            uint sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
+
+            for (var i = 0; i < _arr.Length; i++)
+            {
+                switch (i % 4)
+                {
+                    case 0: sum0 += _arr[i]; break;
+                    case 1: sum1 += _arr[i]; break;
+                    case 2: sum2 += _arr[i]; break;
+                    case 3: sum3 += _arr[i]; break;
+                }
+            }
+
+            var sum = sum3 + (sum2 << 8) + (sum1 << 16) + (sum0 << 24);
+
+            return sum;
+        }
+
         public static uint ChecksumAvx2(byte[] _bytes, int _offset)
         {
             return ChecksumAvx2(new ReadOnlySpan<byte>(_bytes, _offset, _bytes.Length));

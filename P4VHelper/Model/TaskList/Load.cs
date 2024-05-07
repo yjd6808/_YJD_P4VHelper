@@ -36,9 +36,15 @@ namespace P4VHelper.Model.TaskList
             Mgr.ViewModel.Engine.SegmentMgr.Load(param_);
         }
 
+        protected override void OnBeginDispatched()
+        {
+            Mgr.ViewModel.View.MainTabControl.IsEnabled = false;
+        }
+
         protected override void OnEndDispatched()
         {
             Mgr.ViewModel.Logger?.WriteDebug($"{Description} 작업 완료");
+            Mgr.ViewModel.View.MainTabControl.IsEnabled = true;
         }
     }
 }

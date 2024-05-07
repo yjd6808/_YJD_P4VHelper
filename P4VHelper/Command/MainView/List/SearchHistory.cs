@@ -21,7 +21,6 @@ namespace P4VHelper.Command.MainView.List
 
         public override void Execute(string _text)
         {
-            ViewModel.HistorySearchResult.Clear();
             if (!ViewModel.SearchState.IsValid())
                 throw new Exception("서치 스테이트가 유효하지 않습니다.");
 
@@ -32,7 +31,8 @@ namespace P4VHelper.Command.MainView.List
             param.Alias = ViewModel.SearchState.Alias;
             param.Member = ViewModel.SearchState.Member;
             param.Handler += OnSegmentSearched;
-            ViewModel.HistorySearchResult.Param = param;
+
+            ViewModel.HistorySearchResult.Reset(param);
             ViewModel.TaskMgr.Run(new Search(param, ViewModel.TabName), _removeSameClass: true);
         }
 

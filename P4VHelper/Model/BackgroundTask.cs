@@ -327,9 +327,17 @@ namespace P4VHelper.Model
             Mgr.ViewModel.Logger?.WriteDebug($"{_e} 오류 발생");
         }
         protected virtual void OnInterruptRequested() { }
-        protected virtual void OnInterruptRequestedDispatched() { }
+
+        protected virtual void OnInterruptRequestedDispatched()
+        {
+            Mgr.ViewModel.Logger?.WriteDebug($"{Description} 작업 강제 요청");
+        }
         protected virtual void OnInterrupted() { }
-        protected virtual void OnInterruptedDispatched() { }
+
+        protected virtual void OnInterruptedDispatched()
+        {
+            Mgr.ViewModel.Logger?.WriteDebug($"{Description} 작업 강제 중단");
+        }
         protected virtual void OnTargeted() { }
         protected virtual void OnTargetedDispatched() { }
         protected virtual void OnEnd() {}

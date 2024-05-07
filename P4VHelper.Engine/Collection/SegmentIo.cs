@@ -52,7 +52,7 @@ namespace P4VHelper.Engine.Collection
             {
                 LoadArgs.Changelist? args = _args as LoadArgs.Changelist;
                 bool forceServer = args?.ForceServer ?? false;
-                bool loaded;
+                bool loaded = true;
 
                 if (forceServer)
                 {
@@ -72,13 +72,9 @@ namespace P4VHelper.Engine.Collection
                             loaded = LoadFromServer(_seg);
                         }
                     }
-                    else
-                    {
-                        // 이미 메모리에 올라와있는 경우에는 서버에서 로딩
-                        loaded = LoadFromServer(_seg);
-                    }
-                }
 
+                    // 이미 메모리에 올라와있는 경우에는 서버에서 로딩 안함.
+                }
                 return loaded;
             }
 
@@ -117,7 +113,17 @@ namespace P4VHelper.Engine.Collection
                 }
 
                 int writePos = (int)stream.Position;
-                uint checksum = Checksum.ChecksumAvx2(bytes, 4, writePos - 4); // 시작 4바이트는 체크섬 공간이므로 제외
+                uint checksum = 0;
+
+                if (writePos < 64)
+                {
+                    checksum = Checksum.ChecksumJunior(bytes, 4, writePos - 4);
+                }
+                else
+                {
+                    checksum = Checksum.ChecksumAvx2(bytes, 4, writePos - 4); // 시작 4바이트는 체크섬 공간이므로 제외
+                }
+                
                 writer.Seek(0, SeekOrigin.Begin);
                 writer.Write(checksum);
                 FileEx.WriteAllBytes(path, bytes, 0, writePos);
@@ -146,7 +152,7 @@ namespace P4VHelper.Engine.Collection
                     P4VChangelist changelistMain = new P4VChangelist(native);
                     _seg.Add(changelistMain);
                 }
-                return _seg.Count > 0;
+                return true;
             }
 
             public bool LoadFromFile(Segment _seg)
@@ -158,7 +164,16 @@ namespace P4VHelper.Engine.Collection
                 int fileSize = (int)new FileInfo(path).Length;
                 byte[] bytes = ArrayPool<byte>.Shared.Rent(fileSize);
                 int readBytes = FileEx.ReadAllBytes(path, bytes);
-                uint checksum = Checksum.ChecksumAvx2(bytes, 4, fileSize - 4);
+                uint checksum = 0;
+
+                if (fileSize < 64)
+                {
+                    checksum = Checksum.ChecksumJunior(bytes, 4, fileSize - 4);
+                }
+                else
+                {
+                    checksum = Checksum.ChecksumAvx2(bytes, 4, fileSize - 4);
+                }
 
                 MemoryStream stream = new MemoryStream(bytes);
                 BinaryReader reader = new BinaryReader(stream);

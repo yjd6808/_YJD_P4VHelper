@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+using System.Printing;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,6 +24,7 @@ using P4VHelper.Model.TaskList;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Threading;
+using Microsoft.Win32.SafeHandles;
 using P4VHelper.API;
 using P4VHelper.Base;
 using P4VHelper.Engine.Collection;
@@ -44,7 +47,7 @@ namespace P4VHelper.View
 
             Timer = new DispatcherTimer();
             Timer.Tick += HistoryTabTimer;
-            Timer.Interval = TimeSpan.FromMilliseconds(100);
+            Timer.Interval = TimeSpan.FromMilliseconds(33);
             Timer.Start();
         }
 

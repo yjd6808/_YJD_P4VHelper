@@ -1,5 +1,6 @@
 ﻿// jdyun 24/05/01(수) 근로자의 날
 
+using System.Diagnostics;
 using Microsoft.VisualBasic;
 using P4VHelper.Base.Notifier;
 using P4VHelper.Engine.Collection;
@@ -11,6 +12,8 @@ namespace P4VHelper.Model.TaskList
     {
         private readonly SearchParam param_;
         private readonly string runTab_;
+        private SegmentGroup searchingGroup_;
+        private bool called = false;
 
         public override string ClassId => string.Intern(base.ClassId + runTab_);
 
@@ -30,12 +33,25 @@ namespace P4VHelper.Model.TaskList
 
         public override void Execute()
         {
-            Mgr.ViewModel.Engine.SegmentMgr.Search(param_);
+            called = true;
+            searchingGroup_ = Mgr.ViewModel.Engine.SegmentMgr.Search(param_);
+            Debug.Assert(searchingGroup_ != null);
+        }
+
+        protected override void OnEnd()
+        {
         }
 
         protected override void OnEndDispatched()
         {
             Mgr.ViewModel.Logger?.WriteDebug($"{Description} 작업 완료");
+
+            // 이게 null인 경우가 있네..
+            // 외부에서 레퍼런스 유지를 안해줘서 그런가??
+            if (searchingGroup_ is not null)
+            {
+                Mgr.ViewModel.SetVar($"{searchingGroup_.Config.Type}_SEARCH_FINISHED", true);
+            }
         }
     }
 }

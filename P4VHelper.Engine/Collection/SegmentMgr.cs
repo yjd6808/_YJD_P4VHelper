@@ -107,11 +107,12 @@ namespace P4VHelper.Engine.Collection
             group.Load(_param);
         }
 
-        public void Search(SearchParam _param)
+        public SegmentGroup Search(SearchParam _param)
         {
             _param.Validate();
             SegmentGroup group = GetGroup(_param.Alias, _param.Member);
             group.Search(_param);
+            return group;
         }
     }
 }

@@ -22,8 +22,8 @@ namespace P4VHelper.Base.Extension
 
         public static int ReadAllBytes(string _path, byte[] _buffer)
         {
-            const int chunkSize = 2048;
             using FileStream fs = new FileStream(_path, FileMode.Open, FileAccess.Read);
+            int chunkSize = (int)fs.Length > 2048 ? 2048 : (int)fs.Length;
 
             int bytesRead;
             int offset = 0;

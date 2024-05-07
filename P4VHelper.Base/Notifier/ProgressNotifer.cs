@@ -140,7 +140,7 @@ namespace P4VHelper.Base.Notifier
             if (unit.IsFinished)
                 state |= ProgressState.Finished;
 
-            if (reported)
+            if (reported && unit.Max != int.MaxValue)
             {
                 state |= ProgressState.Reported;
                 Report(_slot);

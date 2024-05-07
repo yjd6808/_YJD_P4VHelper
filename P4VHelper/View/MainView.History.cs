@@ -24,6 +24,29 @@ namespace P4VHelper.View
     {
         private void HistoryTabTimer(object? _sender, EventArgs _e)
         {
+            DateTime now = DateTime.Now;
+            string segStr = SegmentType.Changelist.ToString();
+
+            // set from text changed event
+            if (ViewModel.GetVar<bool>("HISTORY_SEARCH_DIRTY") &&
+                ViewModel.GetVar<DateTime>("HISTORY_SEARCH_TIME") + TimeSpan.FromMilliseconds(50) <= now)
+            {
+                ViewModel.SetVar("HISTORY_SEARCH_DIRTY", false);
+                string text = ViewModel.GetVar<string>("HISTORY_SEARCH_TEXT");
+                ViewModel.SearchState.InputText = text;
+                ViewModel.Commander.SearchHistory.Execute(text);
+            }
+
+            // set from search background task
+            if (ViewModel.GetVar<bool>($"{segStr}_SEARCH_FINISHED"))
+            {
+                if (ViewModel.HistorySearchResult.ScrollableItemCount > 0)
+                {
+                    ViewModel.HistorySearchResult.ViewMoreItems(50);
+                }
+
+                ViewModel.SetVar($"{segStr}_SEARCH_FINISHED", false);
+            }
         }
 
         private void HistorySearchTextBox_OnPreviewTextInput(object _sender, TextCompositionEventArgs _e)
@@ -41,8 +64,12 @@ namespace P4VHelper.View
             if (!IsLoaded)
                 return;
 
-            ViewModel.HistorySearchResult.Clear();
+            // 변경사항이 있고 0.1초뒤에 검색 수행
+            // ViewModel.SetVar("HISTORY_SEARCH_DIRTY", true);
+            // ViewModel.SetVar("HISTORY_SEARCH_TIME", DateTime.Now);
+            // ViewModel.SetVar("HISTORY_SEARCH_TEXT", HistorySearchTextBox.Text);
 
+            // 즉시 검색 수행
             ViewModel.SearchState.InputText = HistorySearchTextBox.Text;
             ViewModel.Commander.SearchHistory.Execute(HistorySearchTextBox.Text);
         }
@@ -116,12 +143,12 @@ namespace P4VHelper.View
             }
 
             #region DEBUG PRINT
-            Debug.WriteLine($"{nameof(_e.ExtentHeight)}: {_e.ExtentHeight}");
-            Debug.WriteLine($"{nameof(_e.ExtentHeightChange)}: {_e.ExtentHeightChange}");
-            Debug.WriteLine($"{nameof(_e.ViewportHeight)}: {_e.ViewportHeight}");
-            Debug.WriteLine($"{nameof(_e.ViewportHeightChange)}: {_e.ViewportHeightChange}");
-            Debug.WriteLine($"{nameof(_e.VerticalOffset)}: {_e.VerticalOffset}");
-            Debug.WriteLine($"{nameof(_e.VerticalChange)}: {_e.VerticalChange}");
+            // Debug.WriteLine($"{nameof(_e.ExtentHeight)}: {_e.ExtentHeight}");
+            // Debug.WriteLine($"{nameof(_e.ExtentHeightChange)}: {_e.ExtentHeightChange}");
+            // Debug.WriteLine($"{nameof(_e.ViewportHeight)}: {_e.ViewportHeight}");
+            // Debug.WriteLine($"{nameof(_e.ViewportHeightChange)}: {_e.ViewportHeightChange}");
+            // Debug.WriteLine($"{nameof(_e.VerticalOffset)}: {_e.VerticalOffset}");
+            // Debug.WriteLine($"{nameof(_e.VerticalChange)}: {_e.VerticalChange}");
             #endregion
 
             if (_e.VerticalChange == 0)

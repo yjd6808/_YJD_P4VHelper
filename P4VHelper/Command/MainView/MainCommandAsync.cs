@@ -8,10 +8,19 @@ using P4VHelper.ViewModel;
 
 namespace P4VHelper.Command.MainView
 {
-    internal class MainCommandAsync : CommandAsync
+    public abstract class MainCommandAsync : CommandAsync
     {
         protected MainViewModel ViewModel { get; }
-        public MainCommandAsync(MainViewModel _viewModel, string _description, Action<Exception>? _errorHandler) : base(_description, _errorHandler)
+        public MainCommandAsync(MainViewModel _viewModel, string _description, Action<Exception>? _errorHandler = null) : base(_description, _errorHandler)
+        {
+            ViewModel = _viewModel;
+        }
+    }
+
+    public abstract class MainCommandAsync<T> : CommandAsync<T> where T : class
+    {
+        protected MainViewModel ViewModel { get; }
+        public MainCommandAsync(MainViewModel _viewModel, string _description, Action<Exception>? _errorHandler = null) : base(_description, _errorHandler)
         {
             ViewModel = _viewModel;
         }

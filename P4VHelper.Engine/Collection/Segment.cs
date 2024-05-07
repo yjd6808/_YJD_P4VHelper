@@ -124,7 +124,6 @@ namespace P4VHelper.Engine.Collection
             lock (this)
             {
                 ThrowIfNotReady();
-                ThrowIfNotLoaded();
                 Parent.Io.Save(this, _args);
             }
         }
@@ -160,7 +159,10 @@ namespace P4VHelper.Engine.Collection
                     }
                 }
 
-                Clear();
+                if (state_ == SegmentState.Disk)
+                {
+                    Clear();
+                }
             }
 
             _param.NotifySlot(enteredSlot);
@@ -172,8 +174,6 @@ namespace P4VHelper.Engine.Collection
         {
             lock (this)
             {
-                ThrowIfNotLoaded();
-
                 int size = sizeof(uint) + sizeof(int); // checksum + count
                 for (int i = 0; i < Count; ++i)
                 {
@@ -207,7 +207,7 @@ namespace P4VHelper.Engine.Collection
 
         protected void ThrowIfNotLoaded()
         {
-            if (state_ == SegmentState.None || elements_ == null)
+            if (elements_ == null)
                 throw new Exception("로드되지 않은 세그먼트입니다.");
         }
 

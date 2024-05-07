@@ -20,6 +20,7 @@ namespace P4VHelper.Engine.Collection
         public SegmentType Type => Config.Type;
         public P4VConfig.SegmentGroup Config { get; }
         public string DirPath => $"segments/{Type.ToString().ToLower()}/{Config.Alias}";
+        public string FilePath => $"segments/{Type.ToString().ToLower()}.ini";
         public int Id { get; }
         public SegmentIo Io { get; }
         public int Count => elements_.Count;
@@ -36,6 +37,7 @@ namespace P4VHelper.Engine.Collection
 
         public void Ready(int _count)
         {
+            // 이제 사용안함.
             int readyCount = _count - elements_.Count;    // 추가해줘야하는 세그먼트 수
             int segCount = elements_.Count;               // 기존 세그먼트 수
 
@@ -57,23 +59,6 @@ namespace P4VHelper.Engine.Collection
 
         // 최신 체인지리스트
         public async Task<NativeChangelist> UpdateAndGetLastChangeList()
-        {
-            NativeChangelist changelist;
-            if (timeCache_.Elapsed(Id))
-            {
-                changelist = await API.P4.GetLastChangelistAsync(Config.Path);
-                timeCache_.Set(Id, changelist);
-            }
-            else
-            {
-                changelist = timeCache_.Get<NativeChangelist>(Id);
-            }
-
-            return changelist;
-        }
-
-        // 과거 체인지리스트
-        public async Task<NativeChangelist> UpdateAndGetFirstChangeList()
         {
             NativeChangelist changelist;
             if (timeCache_.Elapsed(Id))

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Automation;
@@ -34,15 +35,13 @@ namespace P4VHelper.Model
         private int cursor_;                                                    // 현재 프로세싱중인 리스트 ID
         private int cursorLast_;                                                // 프로세싱 된 리스트 ID
         private DateTime loadingScrollTime_;                                    // 로딩중 ViewMoreItems를 호출한 시각
-        private DateTime lastScrollTime_;                                       // ViewMoreItems를 마지막으로 호출한 시각
         private readonly TimeSpan loadingScrollSyncDelay_;                      // 로딩중 스크롤 ViewMoreItems를 실행할 주기
         private int _scrollableItemCount;                                       // 스크롤 가능한 남은 아이템 수 (멀티쓰레드에서 접근하지만 한번에 접근하는 쓰레드는 1개이므므로 아토믹 처리안함)
-        
+        private SearchParam? param_;
+
         public MainViewModel ViewModel { get; }
         public WpfObservableRangeCollection<T> ViewList { get; }
-        public SearchParam? Param { get; set; }
         public int ScrollableItemCount => _scrollableItemCount;
-        public DateTime LastScrollTime => lastScrollTime_;
 
         public SearchResult(MainViewModel _viewModel)
         {
@@ -76,10 +75,14 @@ namespace P4VHelper.Model
                     ViewMoreItems(ViewModel.Config.ScrollLimit);
                     loadingScrollTime_ = now;
                 }
+
+                // 스크롤 가능한 남은 아이템 수 업데이트
+                UpdateScrollableItemCount();
             }
         }
 
-        public void Clear()
+        private static Stopwatch sw = new();
+        public void Reset(SearchParam _param)
         {
             viewList_.Clear();
 
@@ -87,7 +90,7 @@ namespace P4VHelper.Model
             {
                 bufferedList_.Clear();
 
-                Param = null;
+                param_ = _param;
                 loadingScrollTime_ = new DateTime(0);
                 cursor_ = 1;
                 cursorLast_ = 0;
@@ -103,11 +106,13 @@ namespace P4VHelper.Model
             int leftReadCount = _scrollLimit;
             List<T> readElements = new List<T>(_scrollLimit);
 
-            Debug.Assert(Param != null);
             lock (this)
             {
                 for (; cursor_ <= cursorLast_; )
                 {
+                    if (param_.Notifier.IsInterruptRequested)
+                        break;
+
                     Debug.Assert(bufferedList_.ContainsKey(cursor_));    // 당연히 존재해야한다.
                     SegmentResult segResult = bufferedList_[cursor_];
                     Debug.Assert(segResult.Result.Count > 0);
@@ -123,40 +128,35 @@ namespace P4VHelper.Model
                     if (leftReadCount <= 0)
                         break;
                 }
-                
-                // 스크롤 가능한 남은 아이템 수 업데이트
-                UpdateScrollableItemCount();
-            }
 
-            lastScrollTime_ = DateTime.Now;
-
-            // double check (BeginInvoke(비동기)로 안하면 한번만 체크해도댐)
-            // 만약 double check를 안하고 비동기로 처리해버리면 background task가 interrupt가 되고나서
-            // 아이템이 추가되는 괴이한 현상이 발생할 수 있음
-            if (_async)
-            {
-                if (!Param.Notifier.IsInterruptRequested)
+                if (_async)
                 {
-                    ViewModel.View.Dispatcher.BeginInvoke(() =>
+                    // double check (BeginInvoke(비동기)로 안하면 한번만 체크해도댐)
+                    // 만약 double check를 안하고 비동기로 처리해버리면 background task가 interrupt가 되고나서
+                    // 아이템이 추가되는 괴이한 현상이 발생할 수 있음
+                    if (!param_.Notifier.IsInterruptRequested)
                     {
-                        if (Param.Notifier.IsInterruptRequested)
-                            return;
+                        ViewModel.View.Dispatcher.BeginInvoke(() =>
+                        {
+                            if (param_.Notifier.IsInterruptRequested)
+                                return;
 
+                            viewList_.AddRange(readElements);
+                            OnPropertyChanged(nameof(ScrollableItemCount));
+                        });
+                    }
+                }
+                else
+                {
+                    if (param_.Notifier.IsInterruptRequested)
+                        return _scrollLimit - leftReadCount;
+
+                    ViewModel.View.Dispatcher.Invoke(() =>
+                    {
                         viewList_.AddRange(readElements);
                         OnPropertyChanged(nameof(ScrollableItemCount));
                     });
                 }
-            }
-            else
-            {
-                if (Param.Notifier.IsInterruptRequested)
-                    return _scrollLimit - leftReadCount;
-
-                ViewModel.View.Dispatcher.Invoke(() =>
-                {
-                    viewList_.AddRange(readElements);
-                    OnPropertyChanged(nameof(ScrollableItemCount));
-                });
             }
 
             return _scrollLimit - leftReadCount;
